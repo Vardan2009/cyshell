@@ -6,6 +6,8 @@
 #include <unistd.h>
 
 void cyRunCommand(int argc, char **argv) {
+    if (argc == 0) return;
+
     pid_t pid = fork();
 
     char **argvnull = malloc((argc + 1) * sizeof(char *));
