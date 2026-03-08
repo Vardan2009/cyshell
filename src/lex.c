@@ -46,14 +46,33 @@ inline static int isOneChar(char c) {
     return c == '[' || c == ']' || c == '(' || c == ')' || c == '{' || c == '}';
 }
 
+inline static int isOutBounds(cyLex *lex) { return lex->pos >= lex->inputSz; }
+
+cyTok stringTok(cyLex *lex) {
+    int start = ++lex->pos;
+
+    while (!isOutBounds(lex) && lex->input[lex->pos] != '"') ++lex->pos;
+
+    if (isOutBounds(lex)) {
+        printf("cysh: unterminated string literal\n");
+        return (cyTok){TT_EOF};
+    } else {
+        int len = lex->pos - start;
+        ++lex->pos;
+
+        return (cyTok){TT_STRING, &lex->input[start], len};
+    }
+}
+
 cyTok cyLexNextToken(cyLex *lex) {
     while (isspace(lex->input[lex->pos])) ++lex->pos;
 
-    if (lex->pos >= lex->inputSz) return (cyTok){TT_EOF};
+    if (isOutBounds(lex)) return (cyTok){TT_EOF};
 
     char c = lex->input[lex->pos];
 
     if (isOneChar(c)) return oneCharTok(lex);
+    if (c == '"') return stringTok(lex);
 
     switch (lex->mode) {
         case M_EXPR:
@@ -66,7 +85,7 @@ cyTok cyLexNextToken(cyLex *lex) {
                 ++lex->pos;
                 c = lex->input[lex->pos];
 
-                if (lex->pos >= lex->inputSz) break;
+                if (isOutBounds(lex)) break;
             }
 
             return (cyTok){TT_IDENT, &lex->input[start], lex->pos - start};

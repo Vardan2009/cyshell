@@ -14,12 +14,15 @@ typedef struct {
 
 typedef enum {
     TT_IDENT,
+    TT_STRING,
+
     TT_LPAREN,
     TT_RPAREN,
     TT_LSQR,
     TT_RSQR,
     TT_LBRACKET,
     TT_RBRACKET,
+
     TT_EOF
 } cyTT;
 
