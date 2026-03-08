@@ -6,6 +6,9 @@ add_executable(cysh
 	
 	src/lex.h
 	src/lex.c
+
+	src/run.h
+	src/run.c
 )
 
 if(UNIX AND NOT APPLE)
