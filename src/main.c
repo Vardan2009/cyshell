@@ -1,3 +1,5 @@
+#include <errno.h>
+#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -6,6 +8,13 @@
 #include "run.h"
 
 cyLex lex;
+
+volatile sig_atomic_t gotSigInt = 0;
+
+void cySigInt(int sig) {
+    (void)sig;
+    gotSigInt = 1;
+}
 
 void cyProc(const char *src, size_t len) {
     cyLexInit(&lex, src, len);
@@ -28,7 +37,11 @@ void cyProc(const char *src, size_t len) {
         argv[argc - 1] = str;
     }
 
-    cyRunCommand(argc, argv);
+    if (argc == 1 && strcmp(argv[0], "exit") == 0) {
+        signal(SIGINT, SIG_DFL);
+        exit(0);
+    } else
+        cyRunCommand(argc, argv);
 
     for (int i = 0; i < argc; ++i) free(argv[i]);
     free(argv);
@@ -36,6 +49,12 @@ void cyProc(const char *src, size_t len) {
 
 int main(int argc, char *argv[]) {
     printf("cyShell\n\n");
+
+    struct sigaction sa;
+    sa.sa_handler = cySigInt;
+    sigemptyset(&sa.sa_mask);
+    sa.sa_flags = 0;
+    sigaction(SIGINT, &sa, NULL);
 
     while (1) {
         char *line = NULL;
@@ -47,8 +66,15 @@ int main(int argc, char *argv[]) {
         read = getline(&line, &len, stdin);
 
         if (read == -1) {
+            if (errno == EINTR) {
+                clearerr(stdin);
+                gotSigInt = 0;
+                printf("\n");
+                continue;
+            }
+
             free(line);
-            continue;
+            break;
         }
 
         cyProc(line, read);

@@ -1,5 +1,6 @@
 #include "run.h"
 
+#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/wait.h>
@@ -16,8 +17,10 @@ void cyRunCommand(int argc, char **argv) {
     argvnull[argc] = NULL;
 
     if (pid == 0) {
+        signal(SIGINT, SIG_DFL);
         execv(argv[0], argvnull);
         perror("execv");
+        exit(1);
     }
 
     free(argvnull);
