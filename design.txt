@@ -1,16 +1,50 @@
-[] => command mode              => returns command result object
-{} => expression mode + scope   => returns last expression (like in rust or lisp)
+by default, everything is identifier
 
-```
-$ echo 1 + 1
+$ echo 1 + 1 ("echo" "1" "+" "1")
 1 + 1
 
-$ echo {1 + 1}
-2
+square brackets force expression mode
+
+$ echo [ 1 + 2 * 3 ] ("echo", 1 + 2 * 3)
+7
+
+{} captures commands
+
+$ .set command {a_command}
+$ .set error_output [command:stderr]
+
+double-quoted strings work in both expression and command mode
+$ echo "Hello, World!"
+
+dots are used for directives
+
+$ .if [ $x == 1 ] ... .fi
+
+
+(the syntax is also linebreak-sensitive)
+```
+.local num
+.set num 10
+
+.if [ $num > 10 ]
+	echo "Number is greated than 10"
+.elif [ $num == 10 ]
+	echo "Number is exactly 10"
+.else
+	echo "Number is less than 10"
+.fi
 ```
 
-command mode    => everything is identifier, except strings ("..."), pipes (|), output redirection (>, &>, `>) and similar posix shell stuff
-expression mode => identifiers (used for stuff like ifs), variables, operators, ...
+like in bash, functions "return" with an exit status, and data 
+transfer is done through stdout
+```
+.fn add
+	.local sum
+	.set sum [ $1 + $2 ]
+	echo $sum
+.nf
 
-colons used for object attr access
-{[echo test]:stdout} # note, the stdout here is optional, since the command result object implicitly returns stdout
+.local result
+.set result {add 9 10}
+echo ["The sum is " + $result]
+```
