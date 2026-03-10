@@ -8,7 +8,7 @@ void cyLexInit(cyLex *lex, const char *src, size_t len) {
     lex->input = src;
     lex->inputSz = len;
     lex->pos = 0;
-    lex->mode = M_COMMAND;
+    lex->mode = M_ROOT;
 }
 
 cyTok oneCharTok(cyLex *lex) {
@@ -34,6 +34,9 @@ cyTok oneCharTok(cyLex *lex) {
         case '}':
             tt = TT_RBRACKET;
             break;
+        case '|':
+            tt = TT_PIPE;
+            break;
         default:
             printf("unhandled one char `%c`\n", lex->input[pos]);
             exit(1);
@@ -43,7 +46,8 @@ cyTok oneCharTok(cyLex *lex) {
 }
 
 inline static int isOneChar(char c) {
-    return c == '[' || c == ']' || c == '(' || c == ')' || c == '{' || c == '}';
+    return c == '[' || c == ']' || c == '(' || c == ')' || c == '{' ||
+           c == '}' || c == '|';
 }
 
 inline static int isOutBounds(cyLex *lex) { return lex->pos >= lex->inputSz; }
@@ -78,6 +82,7 @@ cyTok cyLexNextToken(cyLex *lex) {
         case M_EXPR:
             printf("expr mode\n");
             exit(1);
+        case M_ROOT:
         case M_COMMAND: {
             int start = lex->pos;
 

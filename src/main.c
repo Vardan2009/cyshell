@@ -40,8 +40,8 @@ void cyProc(const char *src, size_t len) {
     if (argc == 1 && strcmp(argv[0], "exit") == 0) {
         signal(SIGINT, SIG_DFL);
         exit(0);
-    } else
-        cyRunCommand(argc, argv);
+    }  // else
+       //    cyRunCommand(argc, argv);
 
     for (int i = 0; i < argc; ++i) free(argv[i]);
     free(argv);

@@ -1,0 +1,16 @@
+[] => command mode              => returns command result object
+{} => expression mode + scope   => returns last expression (like in rust or lisp)
+
+```
+$ echo 1 + 1
+1 + 1
+
+$ echo {1 + 1}
+2
+```
+
+command mode    => everything is identifier, except strings ("..."), pipes (|), output redirection (>, &>, `>) and similar posix shell stuff
+expression mode => identifiers (used for stuff like ifs), variables, operators, ...
+
+colons used for object attr access
+{[echo test]:stdout} # note, the stdout here is optional, since the command result object implicitly returns stdout
