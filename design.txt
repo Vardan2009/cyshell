@@ -3,9 +3,9 @@ by default, everything is identifier
 $ echo 1 + 1 ("echo" "1" "+" "1")
 1 + 1
 
-square brackets force expression mode
+parenthases force expression mode
 
-$ echo [ 1 + 2 * 3 ] ("echo", 1 + 2 * 3)
+$ echo (1 + 2 * 3) ("echo", 1 + 2 * 3)
 7
 
 &() captures commands
@@ -16,16 +16,16 @@ $ let error_output [command:stderr]
 double-quoted strings work in both expression and command mode
 $ echo "Hello, World!"
 
-{} groups multiple commands, uses semicolons for separating, returns last command captured
+{} groups multiple commands, uses semicolons for separating
 
-$ if [ $x > 10 ] { echo The number $x is bigger than 10; my_command }
+$ if ($x > 10) { echo The number $x is bigger than 10; my_command }
 
 ```
-let num 10;
+let $num 10;
 
-if [ $num > 10 ] {
+if ($num > 10) {
 	echo "Number is greated than 10"
-} elif [ $num == 10 ] {
+} elif ($num == 10) {
 	echo "Number is exactly 10"
 } else {
 	echo "Number is less than 10"
@@ -36,10 +36,10 @@ like in bash, functions "return" with an exit status, and data
 transfer is done through stdout
 ```
 fn add {
-	let sum [ $1 + $2 ]
+	let $sum ($1 + $2);
 	echo $sum
 };
 
-let result $(add 9 10);
+let result &(add 9 10);
 echo "The sum is " $result
 ```

@@ -7,6 +7,9 @@ add_executable(cysh
 	src/lex.h
 	src/lex.c
 
+	src/parser.h
+	src/parser.c
+
 	src/run.h
 	src/run.c
 )

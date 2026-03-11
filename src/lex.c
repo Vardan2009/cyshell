@@ -9,6 +9,7 @@ void cyLexInit(cyLex *lex, const char *src, size_t len) {
     lex->inputSz = len;
     lex->pos = 0;
     lex->mode = M_COMMAND;
+    lex->parenDepth = 0;
 }
 
 static cyTok oneCharTok(cyLex *lex) {
@@ -17,21 +18,21 @@ static cyTok oneCharTok(cyLex *lex) {
 
     switch (lex->input[pos]) {
         case '[':
-            if (lex->mode == M_EXPR) {
-                printf("cysh: already in expr mode\n");
-                exit(1);
-            }
-            lex->mode = M_EXPR;
             tt = TT_LSQR;
             break;
         case ']':
-            lex->mode = M_COMMAND;
             tt = TT_RSQR;
             break;
         case '(':
+            lex->mode = M_EXPR;
+            ++lex->parenDepth;
             tt = TT_LPAREN;
             break;
         case ')':
+            if (--lex->parenDepth <= 0) {
+                lex->parenDepth = 0;
+                lex->mode = M_COMMAND;
+            }
             tt = TT_RPAREN;
             break;
         case '{':

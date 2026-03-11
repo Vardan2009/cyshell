@@ -10,6 +10,8 @@ typedef struct {
     size_t inputSz;
     int pos;
     cyLexMode mode;
+
+    int parenDepth;
 } cyLex;
 
 typedef enum {

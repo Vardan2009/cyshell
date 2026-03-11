@@ -5,9 +5,11 @@
 #include <string.h>
 
 #include "lex.h"
+#include "parser.h"
 #include "run.h"
 
 cyLex lex;
+cyParser parser;
 
 volatile sig_atomic_t gotSigInt = 0;
 
@@ -18,33 +20,14 @@ void cySigInt(int sig) {
 
 void cyProc(const char *src, size_t len) {
     cyLexInit(&lex, src, len);
+    cyParserInit(&parser, &lex);
+
+    // cyNode *root = cyParse(&parser);
+    // free(root);
 
     cyTok tok;
-
-    char **argv = NULL;
-    int argc = 0;
-
-    while ((tok = cyLexNextToken(&lex)).type != TT_EOF) {
+    while ((tok = cyLexNextToken(&lex)).type != TT_EOF)
         printf("TOKEN [TYPE %02d] `%.*s`\n", tok.type, (int)tok.len, tok.start);
-
-        char *str = malloc(tok.len + 1);
-        strncpy(str, tok.start, tok.len);
-        str[tok.len] = 0;
-
-        ++argc;
-        argv = realloc(argv, sizeof(char *) * argc);
-
-        argv[argc - 1] = str;
-    }
-
-    if (argc == 1 && strcmp(argv[0], "exit") == 0) {
-        signal(SIGINT, SIG_DFL);
-        exit(0);
-    }  // else
-       //    cyRunCommand(argc, argv);
-
-    for (int i = 0; i < argc; ++i) free(argv[i]);
-    free(argv);
 }
 
 int main(int argc, char *argv[]) {
@@ -76,6 +59,8 @@ int main(int argc, char *argv[]) {
             free(line);
             break;
         }
+
+        if (read == 1) break;
 
         cyProc(line, read);
 
