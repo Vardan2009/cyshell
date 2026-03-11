@@ -3,7 +3,7 @@
 
 #include <stddef.h>
 
-typedef enum { M_ROOT, M_COMMAND, M_EXPR } cyLexMode;
+typedef enum { M_COMMAND, M_EXPR } cyLexMode;
 
 typedef struct {
     const char *input;
@@ -24,6 +24,8 @@ typedef enum {
     TT_RBRACKET,
 
     TT_PIPE,
+    TT_AMP,
+    TT_VARNAME,
 
     TT_EOF
 } cyTT;

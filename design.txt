@@ -8,9 +8,9 @@ square brackets force expression mode
 $ echo [ 1 + 2 * 3 ] ("echo", 1 + 2 * 3)
 7
 
-$() captures commands
+&() captures commands
 
-$ let command $(a_command)
+$ let command &(a_command)
 $ let error_output [command:stderr]
 
 double-quoted strings work in both expression and command mode

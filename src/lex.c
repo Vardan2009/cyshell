@@ -8,18 +8,24 @@ void cyLexInit(cyLex *lex, const char *src, size_t len) {
     lex->input = src;
     lex->inputSz = len;
     lex->pos = 0;
-    lex->mode = M_ROOT;
+    lex->mode = M_COMMAND;
 }
 
-cyTok oneCharTok(cyLex *lex) {
+static cyTok oneCharTok(cyLex *lex) {
     int pos = lex->pos++;
     cyTT tt;
 
     switch (lex->input[pos]) {
         case '[':
+            if (lex->mode == M_EXPR) {
+                printf("cysh: already in expr mode\n");
+                exit(1);
+            }
+            lex->mode = M_EXPR;
             tt = TT_LSQR;
             break;
         case ']':
+            lex->mode = M_COMMAND;
             tt = TT_RSQR;
             break;
         case '(':
@@ -37,6 +43,9 @@ cyTok oneCharTok(cyLex *lex) {
         case '|':
             tt = TT_PIPE;
             break;
+        case '&':
+            tt = TT_AMP;
+            break;
         default:
             printf("unhandled one char `%c`\n", lex->input[pos]);
             exit(1);
@@ -47,12 +56,12 @@ cyTok oneCharTok(cyLex *lex) {
 
 inline static int isOneChar(char c) {
     return c == '[' || c == ']' || c == '(' || c == ')' || c == '{' ||
-           c == '}' || c == '|';
+           c == '}' || c == '|' || c == '&';
 }
 
 inline static int isOutBounds(cyLex *lex) { return lex->pos >= lex->inputSz; }
 
-cyTok stringTok(cyLex *lex) {
+static cyTok stringTok(cyLex *lex) {
     int start = ++lex->pos;
 
     while (!isOutBounds(lex) && lex->input[lex->pos] != '"') ++lex->pos;
@@ -68,6 +77,20 @@ cyTok stringTok(cyLex *lex) {
     }
 }
 
+static cyTok varnameTok(cyLex *lex) {
+    ++lex->pos;
+    if (isOutBounds(lex)) {
+        printf("cysh: expected varname\n");
+        return (cyTok){TT_EOF};
+    }
+
+    int start = lex->pos;
+
+    while (!isOutBounds(lex) && isalnum(lex->input[lex->pos])) ++lex->pos;
+
+    return (cyTok){TT_VARNAME, &lex->input[start], lex->pos - start};
+}
+
 cyTok cyLexNextToken(cyLex *lex) {
     while (isspace(lex->input[lex->pos])) ++lex->pos;
 
@@ -78,11 +101,12 @@ cyTok cyLexNextToken(cyLex *lex) {
     if (isOneChar(c)) return oneCharTok(lex);
     if (c == '"') return stringTok(lex);
 
+    if (c == '$') return varnameTok(lex);
+
     switch (lex->mode) {
         case M_EXPR:
             printf("expr mode\n");
             exit(1);
-        case M_ROOT:
         case M_COMMAND: {
             int start = lex->pos;
 
