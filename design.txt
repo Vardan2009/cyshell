@@ -21,7 +21,7 @@ $ echo "Hello, World!"
 $ if [ $x > 10 ] { echo The number $x is bigger than 10; my_command }
 
 ```
-let num 10
+let num 10;
 
 if [ $num > 10 ] {
 	echo "Number is greated than 10"
@@ -40,6 +40,6 @@ fn add {
 	echo $sum
 };
 
-let result {add 9 10};
-echo "The sum is " $result;
+let result $(add 9 10);
+echo "The sum is " $result
 ```
