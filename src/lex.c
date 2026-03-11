@@ -86,7 +86,9 @@ static cyTok varnameTok(cyLex *lex) {
 
     int start = lex->pos;
 
-    while (!isOutBounds(lex) && isalnum(lex->input[lex->pos])) ++lex->pos;
+    while (!isOutBounds(lex) &&
+           (isalnum(lex->input[lex->pos]) || lex->input[lex->pos] == '_'))
+        ++lex->pos;
 
     return (cyTok){TT_VARNAME, &lex->input[start], lex->pos - start};
 }
@@ -104,9 +106,10 @@ cyTok cyLexNextToken(cyLex *lex) {
     if (c == '$') return varnameTok(lex);
 
     switch (lex->mode) {
-        case M_EXPR:
-            printf("expr mode\n");
-            exit(1);
+        case M_EXPR: {
+            printf("cysh: unhandled character: `%c`\n", lex->input[lex->pos]);
+            return (cyTok){TT_EOF};
+        }
         case M_COMMAND: {
             int start = lex->pos;
 
