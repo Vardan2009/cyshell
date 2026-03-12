@@ -3,7 +3,7 @@ by default, everything is identifier
 $ echo 1 + 1 ("echo" "1" "+" "1")
 1 + 1
 
-parenthases force expression mode
+parentheses force expression mode
 
 $ echo (1 + 2 * 3) ("echo", 1 + 2 * 3)
 7
