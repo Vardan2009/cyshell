@@ -34,6 +34,7 @@ typedef enum {
     TT_MINUS,
     TT_STAR,
     TT_SLASH,
+    TT_SEMI,
 
     TT_EOF
 } cyTT;

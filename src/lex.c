@@ -47,6 +47,9 @@ static cyTok oneCharTok(cyLex *lex) {
         case '&':
             tt = TT_AMP;
             break;
+        case ';':
+            tt = TT_SEMI;
+            break;
         default:
             printf("unhandled one char `%c`\n", lex->input[pos]);
             exit(1);
@@ -82,7 +85,7 @@ static cyTok oneCharExprTok(cyLex *lex) {
 
 inline static int isOneChar(char c) {
     return c == '[' || c == ']' || c == '(' || c == ')' || c == '{' ||
-           c == '}' || c == '|' || c == '&';
+           c == '}' || c == '|' || c == '&' || c == ';';
 }
 
 inline static int isOneCharExpr(char c) {

@@ -16,17 +16,25 @@ typedef enum {
     NT_COMMAND,
 } cyNT;
 
+typedef struct _cyNode cyNode;
+
+typedef struct {
+    cyNode **data;
+    size_t count;
+    size_t capacity;
+} cyNodeList;
+
 typedef struct _cyNode {
     cyNT type;
-
-    struct _cyNode *children;
-    size_t childCount;
-
+    cyNodeList list;
     const char *start;
     size_t len;
 } cyNode;
 
 void cyParserInit(cyParser *parser, cyLex *lex);
 cyNode *cyParse(cyParser *parser);
+
+void cyNodePrint(cyNode *node, int indent);
+void cyNodeFree(cyNode *node);
 
 #endif  // _CYSH_PARSER
