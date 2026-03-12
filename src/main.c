@@ -20,7 +20,7 @@ void cySigInt(int sig) {
 
 void cyProc(const char *src, size_t len) {
     cyLexInit(&lex, src, len);
-    cyParserInit(&parser, &lex);
+    // cyParserInit(&parser, &lex);
 
     // cyNode *root = cyParse(&parser);
     // free(root);

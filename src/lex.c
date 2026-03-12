@@ -55,9 +55,38 @@ static cyTok oneCharTok(cyLex *lex) {
     return (cyTok){tt, &lex->input[pos], 1};
 }
 
+static cyTok oneCharExprTok(cyLex *lex) {
+    int pos = lex->pos++;
+    cyTT tt;
+
+    switch (lex->input[pos]) {
+        case '+':
+            tt = TT_PLUS;
+            break;
+        case '-':
+            tt = TT_MINUS;
+            break;
+        case '*':
+            tt = TT_STAR;
+            break;
+        case '/':
+            tt = TT_SLASH;
+            break;
+        default:
+            printf("unhandled expr one char `%c`\n", lex->input[pos]);
+            exit(1);
+    }
+
+    return (cyTok){tt, &lex->input[pos], 1};
+}
+
 inline static int isOneChar(char c) {
     return c == '[' || c == ']' || c == '(' || c == ')' || c == '{' ||
            c == '}' || c == '|' || c == '&';
+}
+
+inline static int isOneCharExpr(char c) {
+    return c == '+' || c == '-' || c == '*' || c == '/';
 }
 
 inline static int isOutBounds(cyLex *lex) { return lex->pos >= lex->inputSz; }
@@ -94,6 +123,18 @@ static cyTok varnameTok(cyLex *lex) {
     return (cyTok){TT_VARNAME, &lex->input[start], lex->pos - start};
 }
 
+static cyTok numberTok(cyLex *lex) {
+    int start = lex->pos;
+    int decPnt = 0;
+    while (!isOutBounds(lex) && (isdigit(lex->input[lex->pos]) ||
+                                 (!decPnt && lex->input[lex->pos == '.']))) {
+        if (lex->input[lex->pos == '.']) decPnt = 1;
+        ++lex->pos;
+    }
+
+    return (cyTok){TT_NUMBER, &lex->input[start], lex->pos - start};
+}
+
 cyTok cyLexNextToken(cyLex *lex) {
     while (isspace(lex->input[lex->pos])) ++lex->pos;
 
@@ -108,6 +149,8 @@ cyTok cyLexNextToken(cyLex *lex) {
 
     switch (lex->mode) {
         case M_EXPR: {
+            if (isdigit(c)) return numberTok(lex);
+            if (isOneCharExpr(c)) return oneCharExprTok(lex);
             printf("cysh: unhandled character: `%c`\n", lex->input[lex->pos]);
             return (cyTok){TT_EOF};
         }

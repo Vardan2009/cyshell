@@ -17,6 +17,7 @@ typedef struct {
 typedef enum {
     TT_IDENT,
     TT_STRING,
+    TT_NUMBER,
 
     TT_LPAREN,
     TT_RPAREN,
@@ -28,6 +29,11 @@ typedef enum {
     TT_PIPE,
     TT_AMP,
     TT_VARNAME,
+
+    TT_PLUS,
+    TT_MINUS,
+    TT_STAR,
+    TT_SLASH,
 
     TT_EOF
 } cyTT;
