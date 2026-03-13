@@ -11,12 +11,14 @@ $ echo (1 + 2 * 3) ("echo", 1 + 2 * 3)
 &() captures commands
 
 $ let command &(a_command)
-$ let error_output [command:stderr]
+$ let error_output (command:stderr)
 
 double-quoted strings work in both expression and command mode
 $ echo "Hello, World!"
 
 {} groups multiple commands, uses semicolons for separating
+
+(ifs and other statements (let, while, for, etc) are handled differently than commands)
 
 $ if ($x > 10) { echo The number $x is bigger than 10; my_command }
 
