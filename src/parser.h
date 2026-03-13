@@ -11,9 +11,11 @@ typedef struct {
 typedef enum {
     NT_IDENT,
     NT_STRING,
+    NT_NUMBER,
     NT_VAR,
     NT_COMMANDLIST,
     NT_COMMAND,
+    NT_BINOP,
 } cyNT;
 
 typedef struct _cyNode cyNode;
@@ -27,8 +29,13 @@ typedef struct {
 typedef struct _cyNode {
     cyNT type;
     cyNodeList list;
-    const char *start;
-    size_t len;
+    union {
+        struct {
+            const char *start;
+            size_t len;
+        };
+        cyTT tt;
+    };
 } cyNode;
 
 void cyParserInit(cyParser *parser, cyLex *lex);

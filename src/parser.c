@@ -25,7 +25,9 @@ void cyNodeFree(cyNode *node) {
 void cyNodePrint(cyNode *node, int indent) {
     for (int i = 0; i < indent; ++i) printf("   ");
 
-    if (node->start == NULL)
+    if (node->type == NT_BINOP)
+        printf("- [%d] OP %d\n", node->type, node->tt);
+    else if (node->start == NULL)
         printf("- [%d]\n", node->type);
     else
         printf("- [%d] \"%.*s\"\n", node->type, (int)node->len, node->start);
@@ -62,8 +64,74 @@ static cyTok advance(cyParser *parser) {
     return prev;
 }
 
-static cyNode *parseExpr(cyParser *parser) {
-    // TODO: Finish this
+static cyNode *parseExpr(cyParser *parser, int minPrec);
+
+static cyNode *parsePrimary(cyParser *parser) {
+    switch (parser->current.type) {
+        case TT_NUMBER: {
+            cyNode *r =
+                newLeaf(NT_NUMBER, parser->current.start, parser->current.len);
+            advance(parser);
+            return r;
+        }
+        case TT_VARNAME: {
+            cyNode *r =
+                newLeaf(NT_VAR, parser->current.start, parser->current.len);
+            advance(parser);
+            return r;
+        }
+        case TT_STRING: {
+            cyNode *r =
+                newLeaf(NT_STRING, parser->current.start, parser->current.len);
+            advance(parser);
+            return r;
+        }
+        case TT_LPAREN:
+            advance(parser);
+            cyNode *t = parseExpr(parser, 0);
+            if (parser->current.type != TT_RPAREN) {
+                printf("cysh: unclosed `(`\n");
+                exit(1);
+            }
+            advance(parser);
+            return t;
+    }
+}
+
+static int precedence(cyTT op) {
+    switch (op) {
+        case TT_STAR:
+        case TT_SLASH:
+            return 10;
+        case TT_PLUS:
+        case TT_MINUS:
+            return 9;
+        default:
+            return -1;
+    }
+}
+
+static cyNode *parseExpr(cyParser *parser, int minPrec) {
+    cyNode *left = parsePrimary(parser);
+
+    while (parser->current.type != TT_EOF) {
+        int prec = precedence(parser->current.type);
+        if (prec < minPrec) break;
+
+        cyTT op = parser->current.type;
+        advance(parser);
+
+        cyNode *right = parseExpr(parser, prec + 1);
+
+        cyNode *oldLeft = left;
+        left = newLeaf(NT_BINOP, NULL, 0);
+        left->tt = op;
+        left->list = newList(2);
+        left->list.data[0] = oldLeft;
+        left->list.data[1] = right;
+    }
+
+    return left;
 }
 
 static cyNode *parseCommandList(cyParser *parser);
@@ -88,7 +156,7 @@ static cyNode *parseCommandPart(cyParser *parser) {
             advance(parser);
             return newLeaf(NT_VAR, tok.start, tok.len);
         case TT_LPAREN:
-            return parseExpr(parser);
+            return parseExpr(parser, 0);
         case TT_LBRACKET: {
             advance(parser);
             cyNode *root = parseCommandList(parser);
