@@ -139,7 +139,17 @@ static cyTok numberTok(cyLex *lex) {
 }
 
 cyTok cyLexNextToken(cyLex *lex) {
-    while (isspace(lex->input[lex->pos])) ++lex->pos;
+    while(1) {
+        while (isspace(lex->input[lex->pos])) ++lex->pos;
+
+        if (lex->input[lex->pos] == '#') {
+            while (lex->input[lex->pos] && lex->input[lex->pos] != '\n')
+                ++lex->pos;
+            continue;
+        }
+
+        break;
+    }
 
     if (isOutBounds(lex)) return (cyTok){TT_EOF};
 
