@@ -12,6 +12,9 @@ add_executable(cysh
 
 	src/proc.h
 	src/proc.c
+
+	src/run.h
+	src/run.c
 )
 
 if(UNIX AND NOT APPLE)

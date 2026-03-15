@@ -1,6 +1,6 @@
-#ifndef _CYSH_RUN
-#define _CYSH_RUN
+#ifndef _CYSH_PROC
+#define _CYSH_PROC
 
 void cyRunCommand(int argc, char *argv[]);
 
-#endif  // _CYSH_RUN
+#endif  // _CYSH_PROC
