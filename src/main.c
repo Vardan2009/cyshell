@@ -22,16 +22,17 @@ void cySigInt(int sig) {
 
 void cyProc(const char *src, size_t len) {
     cyLexInit(&lex, src, len);
-    cyParserInit(&parser, &lex);
+    // cyParserInit(&parser, &lex);
 
-    cyNode *root = cyParse(&parser);
-    cyNodePrint(root, 0);
-    cyNodeFree(root);
+    // cyNode *root = cyParse(&parser);
+    // cyNodePrint(root, 0);
+    // cyNodeFree(root);
 
-    // cyTok tok;
-    // while ((tok = cyLexNextToken(&lex)).type != TT_EOF)
-    //    printf("TOKEN [TYPE %02d] `%.*s`\n", tok.type, (int)tok.len,
-    //    tok.start);
+    cyTok tok;
+    while ((tok = cyLexNextToken(&lex)).type != TT_EOF)
+        printf("TOKEN [TYPE %02d] `%.*s`\n", tok.type, (int)tok.len, tok.start);
+
+    cyLexFree(&lex);
 }
 
 int main(int argc, char *argv[]) {

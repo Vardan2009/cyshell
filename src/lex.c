@@ -8,9 +8,33 @@ void cyLexInit(cyLex *lex, const char *src, size_t len) {
     lex->input = src;
     lex->inputSz = len;
     lex->pos = 0;
-    lex->mode = M_COMMAND;
-    lex->parenDepth = 0;
+
+    // I don't think allocating/deallocating this for each command
+    // is a good idea, might change this later.
+    const size_t initCap = 512;
+    lex->modeStack = malloc(initCap * sizeof(cyLexMode));
+    lex->modeStackCap = initCap;
+    lex->modeStackTop = 1;
+    lex->modeStack[0] = M_COMMAND;
 }
+
+inline static cyLexMode lexMode(cyLex *lex) {
+    return lex->modeStack[lex->modeStackTop - 1];
+}
+
+inline static void lexPush(cyLex *lex, cyLexMode mode) {
+    if (lex->modeStackCap >= lex->modeStackTop) {
+        lex->modeStackCap += 256;
+        lex->modeStack =
+            realloc(lex->modeStack, lex->modeStackCap * sizeof(cyLexMode));
+    }
+
+    lex->modeStack[lex->modeStackTop++] = mode;
+}
+
+inline static void lexPop(cyLex *lex) { --lex->modeStackTop; }
+
+void cyLexFree(cyLex *lex) { free(lex->modeStack); }
 
 static cyTok oneCharTok(cyLex *lex) {
     int pos = lex->pos++;
@@ -24,15 +48,11 @@ static cyTok oneCharTok(cyLex *lex) {
             tt = TT_RSQR;
             break;
         case '(':
-            lex->mode = M_EXPR;
-            ++lex->parenDepth;
+            lexPush(lex, M_EXPR);
             tt = TT_LPAREN;
             break;
         case ')':
-            if (--lex->parenDepth <= 0) {
-                lex->parenDepth = 0;
-                lex->mode = M_COMMAND;
-            }
+            lexPop(lex);
             tt = TT_RPAREN;
             break;
         case '{':
@@ -139,7 +159,7 @@ static cyTok numberTok(cyLex *lex) {
 }
 
 cyTok cyLexNextToken(cyLex *lex) {
-    while(1) {
+    while (1) {
         while (isspace(lex->input[lex->pos])) ++lex->pos;
 
         if (lex->input[lex->pos] == '#') {
@@ -160,7 +180,7 @@ cyTok cyLexNextToken(cyLex *lex) {
 
     if (c == '$') return varnameTok(lex);
 
-    switch (lex->mode) {
+    switch (lexMode(lex)) {
         case M_EXPR: {
             if (isdigit(c)) return numberTok(lex);
             if (isOneCharExpr(c)) return oneCharExprTok(lex);

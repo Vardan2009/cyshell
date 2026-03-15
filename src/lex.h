@@ -9,9 +9,10 @@ typedef struct {
     const char *input;
     size_t inputSz;
     int pos;
-    cyLexMode mode;
 
-    int parenDepth;
+    cyLexMode *modeStack;
+    size_t modeStackCap;
+    size_t modeStackTop;
 } cyLex;
 
 typedef enum {
@@ -46,6 +47,7 @@ typedef struct {
 } cyTok;
 
 void cyLexInit(cyLex *lex, const char *src, size_t len);
+void cyLexFree(cyLex *lex);
 
 cyTok cyLexNextToken(cyLex *lex);
 
