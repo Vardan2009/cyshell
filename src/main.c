@@ -8,7 +8,7 @@
 
 #include "lex.h"
 #include "parser.h"
-#include "run.h"
+#include "proc.h"
 
 cyLex lex;
 cyParser parser;

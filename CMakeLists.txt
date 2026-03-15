@@ -10,8 +10,8 @@ add_executable(cysh
 	src/parser.h
 	src/parser.c
 
-	src/run.h
-	src/run.c
+	src/proc.h
+	src/proc.c
 )
 
 if(UNIX AND NOT APPLE)

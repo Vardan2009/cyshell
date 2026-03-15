@@ -1,4 +1,4 @@
-#include "run.h"
+#include "proc.h"
 
 #include <signal.h>
 #include <stdio.h>
