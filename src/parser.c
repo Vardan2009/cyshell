@@ -15,11 +15,10 @@ static cyNode *newLeaf(cyNT type, const char *start, size_t len) {
     return new;
 }
 
-inline static void listFreeItems(cyNodeList *lst);
-
 void cyNodeFree(cyNode *node) {
     for (int i = 0; i < node->list.count; ++i) cyNodeFree(node->list.data[i]);
-    listFreeItems(&node->list);
+    free(node->list.data);
+    free(node);
 }
 
 void cyNodePrint(cyNode *node, int indent) {
@@ -39,23 +38,20 @@ void cyNodePrint(cyNode *node, int indent) {
 static cyNodeList newList(size_t initialSz) {
     cyNodeList result;
     result.data = (cyNode **)malloc(sizeof(cyNode *) * initialSz);
-    result.capacity = (initialSz > 0) ? initialSz : 1;
+    result.capacity = initialSz;
     result.count = initialSz;
     return result;
 }
 
 inline static void listReserve(cyNodeList *lst, size_t delta) {
     lst->capacity += delta;
-    lst->data = realloc(lst->data, (lst->capacity + delta) * sizeof(cyNode *));
+    lst->data = realloc(lst->data, lst->capacity * sizeof(cyNode *));
 }
 
 inline static void listPush(cyNodeList *lst, cyNode *item) {
-    if (lst->count >= lst->capacity) listReserve(lst, 1);
+    if (lst->count >= lst->capacity)
+        listReserve(lst, lst->capacity ? lst->capacity : 8);
     lst->data[lst->count++] = item;
-}
-
-inline static void listFreeItems(cyNodeList *lst) {
-    for (int i = 0; i < lst->count; ++i) free(lst->data[i]);
 }
 
 static cyTok advance(cyParser *parser) {

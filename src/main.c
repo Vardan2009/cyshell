@@ -64,7 +64,10 @@ int main(int argc, char *argv[]) {
             break;
         }
 
-        if (read == 1) break;
+        if (read == 1) {
+            free(line);
+            break;
+        }
 
         cyProc(line, read);
 
