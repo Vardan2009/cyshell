@@ -15,6 +15,8 @@ add_compile_options(
 )
 
 add_executable(cysh
+    src/vec.h
+
     src/main.cpp
 )
 
