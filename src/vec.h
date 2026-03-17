@@ -6,20 +6,23 @@
 #include <string.h>
 
 template <typename T>
-class vec {
+class cyVec {
    public:
-    vec() {
-        arr = (T *)malloc(sizeof(T));
+    cyVec() {
+        arr = new T[1]();
         cap = 1;
         count = 0;
     }
 
-    ~vec() { free(arr); }
+    ~cyVec() { delete[] arr; }
 
     void push(T el) {
         if (count >= cap) {
+            T *old = arr;
             cap *= 2;
-            arr = (T *)realloc(arr, cap * sizeof(T));
+            arr = new T[cap]();
+            memcpy(arr, old, count);
+            delete[] old;
         }
 
         arr[count++] = el;

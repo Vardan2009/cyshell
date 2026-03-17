@@ -1,19 +1,13 @@
 #include <stdio.h>
 
-#include "vec.h"
+#include "hashmap.h"
 
 int main() {
-    vec<int> myArr;
+    cyMap<const char *, int, cyStringHash> hashmap;
 
-    myArr.push(1);
-    myArr.push(2);
-    myArr.push(3);
+    hashmap["test"] = 123;
 
-    for (int i : myArr) {
-        printf("- %d\n", i);
-    }
-
-    for (size_t i = 0; i < myArr.size(); ++i) printf("- %d\n", myArr[i]);
+    printf("%d\n", hashmap["test"]);
 
     return 0;
 }
