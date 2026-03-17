@@ -28,6 +28,13 @@ class cyVec {
         arr[count++] = el;
     }
 
+    T pop() {
+        T value = static_cast<T &&>(arr[count - 1]);
+        arr[count - 1].~T();
+        count--;
+        return value;
+    }
+
     T &operator[](size_t idx) { return arr[idx]; }
     size_t size() const { return count; }
 

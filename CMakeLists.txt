@@ -19,6 +19,9 @@ add_executable(cysh
     src/hashmap.h
     src/str.h
 
+    src/lex.h
+    src/lex.cpp
+
     src/main.cpp
 )
 

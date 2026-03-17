@@ -1,14 +1,66 @@
+#include <errno.h>
+#include <signal.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
-#include "hashmap.h"
-#include "str.h"
+#include "lex.h"
 
-int main() {
-    cyMap<cyString, int, cyStringHash> hashmap;
+volatile sig_atomic_t gotSigInt = 0;
 
-    hashmap["test"] = 123;
+void cySigInt(int sig) {
+    (void)sig;
+    gotSigInt = 1;
+}
 
-    printf("%d\n", hashmap["test"]);
+void cyProc(const char *src, size_t len) {
+    cyLex l(src, len);
 
-    return 0;
+    cyTok tok;
+    while ((tok = l.nextTok()).t != cyTok::type::EF)
+        printf("TOKEN [TYPE %02d] `%.*s`\n", tok.t, (int)tok.len, tok.start);
+}
+
+int main(int argc, char *argv[]) {
+    (void)argc;
+    (void)argv;
+
+    printf("cyShell\n\n");
+
+    struct sigaction sa;
+    sa.sa_handler = cySigInt;
+    sigemptyset(&sa.sa_mask);
+    sa.sa_flags = 0;
+    sigaction(SIGINT, &sa, NULL);
+
+    while (1) {
+        char *line = NULL;
+        size_t len = 0;
+        ssize_t read;
+
+        printf("$ ");
+
+        read = getline(&line, &len, stdin);
+
+        if (read == 1) {
+            free(line);
+            break;
+        }
+
+        if (read == -1) {
+            if (errno == EINTR) {
+                clearerr(stdin);
+                gotSigInt = 0;
+                printf("\n");
+                continue;
+            }
+
+            free(line);
+            break;
+        }
+
+        cyProc(line, read);
+
+        free(line);
+    }
 }
