@@ -83,4 +83,9 @@ class cyPtr {
     }
 };
 
+template <typename T, typename... Args>
+cyPtr<T> mkptr(Args &&...args) {
+    return cyPtr<T>(new T(static_cast<Args &&>(args)...));
+}
+
 #endif  // CYSH_PTR_H

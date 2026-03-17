@@ -21,7 +21,10 @@ class cyVec {
             T *old = arr;
             cap *= 2;
             arr = new T[cap]();
-            memcpy(arr, old, count);
+
+            for (size_t i = 0; i < count; i++)
+                arr[i] = T(static_cast<T &&>(old[i]));
+
             delete[] old;
         }
 
@@ -30,7 +33,6 @@ class cyVec {
 
     T pop() {
         T value = static_cast<T &&>(arr[count - 1]);
-        arr[count - 1].~T();
         count--;
         return value;
     }

@@ -34,11 +34,11 @@ cyTok cyLex::oneCharTok() {
             tt = cyTok::type::PIPE;
             break;
         case '&':
-            if (input[pos] != '(') {
+            if (input[this->pos] != '(') {
                 printf("expected '(' after '&'\n");
                 exit(1);
             }
-            ++pos;
+            ++this->pos;
             push(mode::COMMAND);
             tt = cyTok::type::AMPPAREN;
             break;
@@ -172,6 +172,5 @@ cyTok cyLex::nextTok() {
         default:
             printf("cysh: unhandled lexer mode\n");
             return cyTok(cyTok::type::EF);
-            break;
     }
 }
