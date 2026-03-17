@@ -5,6 +5,7 @@
 #include <string.h>
 
 #include "lex.h"
+#include "result.h"
 
 volatile sig_atomic_t gotSigInt = 0;
 
@@ -16,9 +17,23 @@ void cySigInt(int sig) {
 void cyProc(const char *src, size_t len) {
     cyLex l(src, len);
 
-    cyTok tok;
-    while ((tok = l.nextTok()).t != cyTok::type::EF)
-        printf("TOKEN [TYPE %02d] `%.*s`\n", tok.t, (int)tok.len, tok.start);
+    while (true) {
+        cyResult<cyTok, cyErr> res = l.nextTok();
+
+        if (res.ok()) {
+            cyTok tok = res.unwrap();
+
+            printf("TOKEN [TYPE %02d] `%.*s`\n", tok.t, (int)tok.len,
+                   tok.start);
+
+            if (tok.t == cyTok::type::EF) break;
+        } else {
+            cyErr e = res.unwrapErr();
+            printerr(e);
+
+            break;
+        }
+    }
 }
 
 int main(int argc, char *argv[]) {

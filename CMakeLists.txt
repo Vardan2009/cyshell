@@ -18,9 +18,15 @@ add_executable(cysh
     src/vec.h
     src/hashmap.h
     src/str.h
+    src/ptr.h
+
+    src/result.h
 
     src/lex.h
     src/lex.cpp
+
+    src/error.h 
+    src/error.cpp
 
     src/main.cpp
 )

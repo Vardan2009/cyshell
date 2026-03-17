@@ -3,6 +3,8 @@
 
 #include <stddef.h>
 
+#include "error.h"
+#include "result.h"
 #include "vec.h"
 
 struct cyTok {
@@ -47,14 +49,16 @@ class cyLex {
 
     ~cyLex();
 
-    cyTok nextTok();
+    cyResult<cyTok, cyErr> nextTok();
 
    private:
     enum mode { COMMAND, EXPR };
 
     const char *input;
     size_t inputSz;
-    size_t pos;
+    size_t pos = 0;
+
+    int line = 1;
 
     cyVec<mode> modeStack;
 
@@ -64,11 +68,11 @@ class cyLex {
 
     inline bool isOutBounds() { return pos >= inputSz; }
 
-    cyTok numberTok();
-    cyTok oneCharTok();
-    cyTok oneCharExprTok();
-    cyTok stringTok();
-    cyTok varnameTok();
+    cyResult<cyTok, cyErr> numberTok();
+    cyResult<cyTok, cyErr> oneCharTok();
+    cyResult<cyTok, cyErr> oneCharExprTok();
+    cyResult<cyTok, cyErr> stringTok();
+    cyResult<cyTok, cyErr> varnameTok();
 };
 
 #endif  // CYSH_LEX_H
