@@ -1,6 +1,7 @@
 #include <stdio.h>
 
 int main() {
-    printf("cyShell\n");
+    // oops
+    printf("cyShell %d\n", *((int *)NULL));
     return 0;
 }

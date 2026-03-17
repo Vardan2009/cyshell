@@ -18,5 +18,19 @@ add_executable(cysh
     src/main.cpp
 )
 
-target_link_options(cysh PRIVATE -nodefaultlibs)
-target_link_libraries(cysh PRIVATE c)
+target_compile_options(cysh PRIVATE
+    $<$<CONFIG:Debug>:   -O0 -g3 -fsanitize=address,undefined>
+    $<$<CONFIG:Release>: -O2 -DNDEBUG>
+)
+
+target_link_options(cysh PRIVATE
+    $<$<CONFIG:Debug>: -fsanitize=address,undefined>
+    -nostdlib++
+)
+
+target_link_libraries(cysh PRIVATE 
+    $<$<CONFIG:Debug>:asan>
+    $<$<CONFIG:Debug>:ubsan>
+    c
+    gcc
+)
