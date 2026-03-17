@@ -17,6 +17,7 @@ add_compile_options(
 add_executable(cysh
     src/vec.h
     src/hashmap.h
+    src/str.h
 
     src/main.cpp
 )

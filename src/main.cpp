@@ -1,9 +1,10 @@
 #include <stdio.h>
 
 #include "hashmap.h"
+#include "str.h"
 
 int main() {
-    cyMap<const char *, int, cyStringHash> hashmap;
+    cyMap<cyString, int, cyStringHash> hashmap;
 
     hashmap["test"] = 123;
 

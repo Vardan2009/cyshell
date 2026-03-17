@@ -4,6 +4,8 @@
 #include <stddef.h>
 #include <stdlib.h>
 
+#include "str.h"
+
 template <typename K, typename V, typename Hash>
 class cyMap {
     struct node {
@@ -133,6 +135,18 @@ struct cyIntHash {
 };
 
 struct cyStringHash {
+    size_t operator()(const cyString &str) const {
+        const char *key = str.cstr();
+        size_t hash = 14695981039346656037ULL;
+        while (*key) {
+            hash ^= static_cast<size_t>(*key++);
+            hash *= 1099511628211ULL;
+        }
+        return hash;
+    }
+};
+
+struct cyCStringHash {
     size_t operator()(const char *key) const {
         size_t hash = 14695981039346656037ULL;
         while (*key) {
