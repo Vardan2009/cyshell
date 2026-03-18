@@ -53,7 +53,7 @@ cyResult<cyTok, cyErr> cyLex::oneCharTok() {
                 mkerr(cyErr::INTERNAL_ERR, line, "unhandled one-char token"));
     }
 
-    return resOk<cyTok, cyErr>(cyTok(tt, &input[pos], this->pos - pos));
+    return resOk<cyTok, cyErr>(cyTok(line, tt, &input[pos], this->pos - pos));
 }
 
 inline static int isOneChar(char c) {
@@ -87,11 +87,12 @@ cyResult<cyTok, cyErr> cyLex::oneCharExprTok() {
                 cyErr::INTERNAL_ERR, line, "unhandled one-char token in expr"));
     }
 
-    return resOk<cyTok, cyErr>(cyTok(tt, &input[pos], this->pos - pos));
+    return resOk<cyTok, cyErr>(cyTok(line, tt, &input[pos], this->pos - pos));
 }
 
 cyResult<cyTok, cyErr> cyLex::stringTok() {
     int start = ++pos;
+    int startl = line;
 
     while (!isOutBounds() && input[pos] != '"') ++pos;
 
@@ -103,11 +104,12 @@ cyResult<cyTok, cyErr> cyLex::stringTok() {
         ++pos;
 
         return resOk<cyTok, cyErr>(
-            cyTok(cyTok::type::STRING, &input[start], len));
+            cyTok(startl, cyTok::type::STRING, &input[start], len));
     }
 }
 
 cyResult<cyTok, cyErr> cyLex::varnameTok() {
+    int startl = line;
     ++pos;
     if (isOutBounds()) {
         return resErr<cyTok, cyErr>(
@@ -119,20 +121,21 @@ cyResult<cyTok, cyErr> cyLex::varnameTok() {
     while (!isOutBounds() && (isalnum(input[pos]) || input[pos] == '_')) ++pos;
 
     return resOk<cyTok, cyErr>(
-        cyTok(cyTok::type::VARNAME, &input[start], pos - start));
+        cyTok(startl, cyTok::type::VARNAME, &input[start], pos - start));
 }
 
 cyResult<cyTok, cyErr> cyLex::numberTok() {
     int start = pos;
-    int decPnt = 0;
+    int startl = line;
+    bool decPnt = false;
     while (!isOutBounds() &&
            (isdigit(input[pos]) || (!decPnt && input[pos == '.']))) {
-        if (input[pos == '.']) decPnt = 1;
+        if (input[pos == '.']) decPnt = true;
         ++pos;
     }
 
     return resOk<cyTok, cyErr>(
-        cyTok(cyTok::type::NUMBER, &input[start], pos - start));
+        cyTok(startl, cyTok::type::NUMBER, &input[start], pos - start));
 }
 
 cyResult<cyTok, cyErr> cyLex::nextTok() {
@@ -171,6 +174,7 @@ cyResult<cyTok, cyErr> cyLex::nextTok() {
         }
         case mode::COMMAND: {
             int start = pos;
+            int startl = line;
 
             while (!isspace(c) && !isOneChar(c)) {
                 ++pos;
@@ -180,7 +184,7 @@ cyResult<cyTok, cyErr> cyLex::nextTok() {
             }
 
             return resOk<cyTok, cyErr>(
-                cyTok(cyTok::type::IDENT, &input[start], pos - start));
+                cyTok(startl, cyTok::type::IDENT, &input[start], pos - start));
         }
         default:
             return resErr<cyTok, cyErr>(

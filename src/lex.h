@@ -37,8 +37,10 @@ struct cyTok {
     const char *start;
     size_t len;
 
-    cyTok(type t = type::EF, const char *start = NULL, size_t len = 0)
-        : t(t), start(start), len(len) {}
+    int line;
+
+    cyTok(int line, type t = type::EF, const char *start = NULL, size_t len = 0)
+        : t(t), start(start), len(len), line(line) {}
 };
 
 class cyLex {

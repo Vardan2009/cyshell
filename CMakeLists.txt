@@ -25,6 +25,9 @@ add_executable(cysh
     src/lex.h
     src/lex.cpp
 
+    src/parser.h 
+    src/parser.cpp
+
     src/error.h 
     src/error.cpp
 

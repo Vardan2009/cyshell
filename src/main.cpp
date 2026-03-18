@@ -5,6 +5,7 @@
 #include <string.h>
 
 #include "lex.h"
+#include "parser.h"
 #include "result.h"
 
 volatile sig_atomic_t gotSigInt = 0;
@@ -17,7 +18,7 @@ void cySigInt(int sig) {
 void cyProc(const char *src, size_t len) {
     cyLex l(src, len);
 
-    while (true) {
+    /*while (true) {
         cyResult<cyTok, cyErr> res = l.nextTok();
 
         if (res.ok()) {
@@ -33,7 +34,15 @@ void cyProc(const char *src, size_t len) {
 
             break;
         }
-    }
+    }*/
+
+    cyParser p(l);
+
+    auto n = p.parse();
+    if (n.ok())
+        n.unwrap()->print();
+    else
+        printerr(n.unwrapErr());
 }
 
 int main(int argc, char *argv[]) {

@@ -8,9 +8,9 @@
 template <typename T>
 class cyVec {
    public:
-    cyVec() {
-        arr = new T[1]();
-        cap = 1;
+    cyVec(size_t initCap = 1) {
+        arr = new T[initCap]();
+        cap = initCap;
         count = 0;
     }
 
