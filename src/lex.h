@@ -3,9 +3,10 @@
 
 #include <stddef.h>
 
+#include <stack>
+
 #include "error.h"
 #include "result.h"
-#include "vec.h"
 
 struct cyTok {
     enum type {
@@ -62,9 +63,9 @@ class cyLex {
 
     int line = 1;
 
-    cyVec<mode> modeStack;
+    std::stack<mode> modeStack;
 
-    inline mode cMode() { return modeStack[modeStack.size() - 1]; }
+    inline mode cMode() { return modeStack.top(); }
     inline void push(mode m) { modeStack.push(m); }
     inline void pop() { modeStack.pop(); }
 

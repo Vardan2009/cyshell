@@ -1,13 +1,16 @@
 #ifndef CYSH_PARSER_H
 #define CYSH_PARSER_H
 
+#include <memory>
+#include <vector>
+
 #include "error.h"
 #include "lex.h"
-#include "ptr.h"
 #include "result.h"
-#include "vec.h"
 
 struct cyNode {
+    using uptr = std::unique_ptr<cyNode>;
+
     enum type {
         IDENT,
         STRING,
@@ -20,7 +23,7 @@ struct cyNode {
     };
 
     type t;
-    cyVec<cyPtr<cyNode>> children;
+    std::vector<uptr> children;
 
     union {
         struct {
@@ -32,16 +35,19 @@ struct cyNode {
 
     void print(int indent = 0);
 
-    cyNode(type t, size_t initCap = 1) : t(t), children(initCap) {
+    cyNode(type t, size_t initCap = 1) : t(t) {
+        children.reserve(initCap);
         val.str.start = NULL;
     }
-    cyNode(type t, const char *start, size_t len, size_t initCap = 1)
-        : t(t), children(initCap) {
+
+    cyNode(type t, const char *start, size_t len, size_t initCap = 1) : t(t) {
+        children.reserve(initCap);
         val.str.start = start;
         val.str.len = len;
     }
-    cyNode(type t, cyTok::type tt, size_t initCap = 1)
-        : t(t), children(initCap) {
+
+    cyNode(type t, cyTok::type tt, size_t initCap = 1) : t(t) {
+        children.reserve(initCap);
         val.str.start = NULL;
         val.tt = tt;
     }
@@ -54,7 +60,7 @@ class cyParser {
         if (result.ok()) current = result.unwrap();
     }
 
-    cyResult<cyPtr<cyNode>, cyErr> parse() { return cmdGroup(); }
+    cyResult<cyNode::uptr, cyErr> parse() { return cmdGroup(); }
 
    private:
     static int precedence(cyTok::type op) {
@@ -76,12 +82,12 @@ class cyParser {
                tt == cyTok::type::LBRACKET || tt == cyTok::type::AMPPAREN;
     }
 
-    cyResult<cyPtr<cyNode>, cyErr> expr(int minPrec = 0);
-    cyResult<cyPtr<cyNode>, cyErr> primary();
+    cyResult<cyNode::uptr, cyErr> expr(int minPrec = 0);
+    cyResult<cyNode::uptr, cyErr> primary();
 
-    cyResult<cyPtr<cyNode>, cyErr> cmdGroup();
-    cyResult<cyPtr<cyNode>, cyErr> cmd();
-    cyResult<cyPtr<cyNode>, cyErr> cmdPart();
+    cyResult<cyNode::uptr, cyErr> cmdGroup();
+    cyResult<cyNode::uptr, cyErr> cmd();
+    cyResult<cyNode::uptr, cyErr> cmdPart();
 
     cyResult<cyTok, cyErr> advance() {
         cyTok prev = current;

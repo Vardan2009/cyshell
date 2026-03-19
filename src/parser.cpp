@@ -2,6 +2,8 @@
 
 #include <stdio.h>
 
+#include <memory>
+
 #include "error.h"
 #include "result.h"
 
@@ -18,11 +20,11 @@ void cyNode::print(int indent) {
     for (size_t i = 0; i < children.size(); ++i) children[i]->print(indent + 1);
 }
 
-cyResult<cyPtr<cyNode>, cyErr> cyParser::primary() {
+cyResult<cyNode::uptr, cyErr> cyParser::primary() {
     switch (current.t) {
         case cyTok::type::NUMBER: {
-            auto r =
-                mkptr<cyNode>(cyNode::type::NUMBER, current.start, current.len);
+            auto r = std::make_unique<cyNode>(cyNode::type::NUMBER,
+                                              current.start, current.len);
 
             auto a = advance();
             if (!a.ok()) return a.unwrapErr();
@@ -30,8 +32,8 @@ cyResult<cyPtr<cyNode>, cyErr> cyParser::primary() {
             return r;
         }
         case cyTok::type::VARNAME: {
-            auto r =
-                mkptr<cyNode>(cyNode::type::VAR, current.start, current.len);
+            auto r = std::make_unique<cyNode>(cyNode::type::VAR, current.start,
+                                              current.len);
 
             auto a = advance();
             if (!a.ok()) return a.unwrapErr();
@@ -39,8 +41,8 @@ cyResult<cyPtr<cyNode>, cyErr> cyParser::primary() {
             return r;
         }
         case cyTok::type::STRING: {
-            auto r =
-                mkptr<cyNode>(cyNode::type::STRING, current.start, current.len);
+            auto r = std::make_unique<cyNode>(cyNode::type::STRING,
+                                              current.start, current.len);
 
             auto a = advance();
             if (!a.ok()) return a.unwrapErr();
@@ -61,7 +63,7 @@ cyResult<cyPtr<cyNode>, cyErr> cyParser::primary() {
             r = advance();
             if (!r.ok()) return r.unwrapErr();
 
-            return t.unwrap();
+            return std::move(t.unwrap());
         }
         case cyTok::type::AMPPAREN: {
             int line = current.line;
@@ -77,7 +79,7 @@ cyResult<cyPtr<cyNode>, cyErr> cyParser::primary() {
             r = advance();
             if (!r.ok()) return r.unwrapErr();
 
-            return t.unwrap();
+            return std::move(t.unwrap());
         }
         default:
             return mkerr(cyErr::INTERNAL_ERR, current.line,
@@ -85,10 +87,10 @@ cyResult<cyPtr<cyNode>, cyErr> cyParser::primary() {
     }
 }
 
-cyResult<cyPtr<cyNode>, cyErr> cyParser::expr(int minPrec) {
+cyResult<cyNode::uptr, cyErr> cyParser::expr(int minPrec) {
     auto leftr = primary();
     if (!leftr.ok()) return leftr.unwrapErr();
-    auto left = leftr.unwrap();
+    auto left = std::move(leftr.unwrap());
 
     while (current.t != cyTok::type::EF) {
         int prec = precedence(current.t);
@@ -101,35 +103,35 @@ cyResult<cyPtr<cyNode>, cyErr> cyParser::expr(int minPrec) {
         auto right = expr(prec + 1);
         if (!right.ok()) return right.unwrapErr();
 
-        auto newLeft = mkptr<cyNode>(cyNode::type::BINOP, op, 2);
-        newLeft->children.push(left);
-        newLeft->children.push(right.unwrap());
+        auto newLeft = std::make_unique<cyNode>(cyNode::type::BINOP, op, 2);
+        newLeft->children.push_back(std::move(left));
+        newLeft->children.push_back(std::move(right.unwrap()));
 
-        left = newLeft;
+        left = std::move(newLeft);
     }
 
     return left;
 }
 
-cyResult<cyPtr<cyNode>, cyErr> cyParser::cmdGroup() {
-    auto result = mkptr<cyNode>(cyNode::type::CMD_GROUP);
+cyResult<cyNode::uptr, cyErr> cyParser::cmdGroup() {
+    auto result = std::make_unique<cyNode>(cyNode::type::CMD_GROUP);
 
     while (isCmdPart(current.t)) {
         auto r = cmd();
         if (!r.ok()) return r.unwrapErr();
-        result->children.push(r.unwrap());
+        result->children.push_back(std::move(r.unwrap()));
     }
 
     return result;
 }
 
-cyResult<cyPtr<cyNode>, cyErr> cyParser::cmd() {
-    auto result = mkptr<cyNode>(cyNode::type::CMD);
+cyResult<cyNode::uptr, cyErr> cyParser::cmd() {
+    auto result = std::make_unique<cyNode>(cyNode::type::CMD);
 
     while (isCmdPart(current.t)) {
         auto r = cmdPart();
         if (!r.ok()) return r.unwrapErr();
-        result->children.push(r.unwrap());
+        result->children.push_back(std::move(r.unwrap()));
     }
 
     if (current.t == cyTok::type::SEMI) {
@@ -140,14 +142,15 @@ cyResult<cyPtr<cyNode>, cyErr> cyParser::cmd() {
     return result;
 }
 
-cyResult<cyPtr<cyNode>, cyErr> cyParser::cmdPart() {
+cyResult<cyNode::uptr, cyErr> cyParser::cmdPart() {
     cyTok tok = current;
     switch (tok.t) {
         case cyTok::type::IDENT: {
             auto r = advance();
             if (!r.ok()) return r.unwrapErr();
 
-            return mkptr<cyNode>(cyNode::type::IDENT, tok.start, tok.len);
+            return std::make_unique<cyNode>(cyNode::type::IDENT, tok.start,
+                                            tok.len);
         }
         case cyTok::type::STRING:
         case cyTok::type::VARNAME:
@@ -167,7 +170,7 @@ cyResult<cyPtr<cyNode>, cyErr> cyParser::cmdPart() {
             r = advance();
             if (!r.ok()) return r.unwrapErr();
 
-            return root.unwrap();
+            return std::move(root.unwrap());
         }
         default:
             return mkerr(cyErr::INTERNAL_ERR, tok.line,

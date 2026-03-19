@@ -8,18 +8,12 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 add_compile_options(
     -fno-exceptions
     -fno-rtti
-    -nostdinc++
     -Wall
     -Wextra
     -Wpedantic
 )
 
 add_executable(cysh
-    src/vec.h
-    src/hashmap.h
-    src/str.h
-    src/ptr.h
-
     src/result.h
 
     src/lex.h
@@ -41,12 +35,9 @@ target_compile_options(cysh PRIVATE
 
 target_link_options(cysh PRIVATE
     $<$<CONFIG:Debug>: -fsanitize=address,undefined>
-    -nostdlib++
 )
 
 target_link_libraries(cysh PRIVATE 
     $<$<CONFIG:Debug>:asan>
     $<$<CONFIG:Debug>:ubsan>
-    c
-    gcc
 )
