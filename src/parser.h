@@ -23,6 +23,7 @@ struct cyNode {
 
     type t;
     std::vector<uptr> children;
+    int line;
 
     union {
         struct {
@@ -34,18 +35,20 @@ struct cyNode {
 
     void print(int indent = 0);
 
-    cyNode(type t, size_t initCap = 1) : t(t) {
+    cyNode(type t, int line, size_t initCap = 1) : t(t), line(line) {
         children.reserve(initCap);
         val.str.start = NULL;
     }
 
-    cyNode(type t, const char *start, size_t len, size_t initCap = 1) : t(t) {
+    cyNode(type t, int line, const char *start, size_t len, size_t initCap = 1)
+        : t(t), line(line) {
         children.reserve(initCap);
         val.str.start = start;
         val.str.len = len;
     }
 
-    cyNode(type t, cyTok::type tt, size_t initCap = 1) : t(t) {
+    cyNode(type t, int line, cyTok::type tt, size_t initCap = 1)
+        : t(t), line(line) {
         children.reserve(initCap);
         val.str.start = NULL;
         val.tt = tt;

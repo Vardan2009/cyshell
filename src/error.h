@@ -6,6 +6,7 @@ struct cyErr {
         UNKNOWN_ERR,
         INTERNAL_ERR,
         SYNTAX_ERR,
+        TYPE_ERR,
     };
 
     code errcode;

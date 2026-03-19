@@ -17,7 +17,8 @@ cyErr mkerr(cyErr::code code, int line, const char *fmt, ...) {
     return err;
 }
 
-const static char *codeStr[] = {"UNKNOWN_ERR", "INTERNAL_ERR", "SYNTAX_ERR"};
+const static char *codeStr[] = {"UNKNOWN_ERR", "INTERNAL_ERR", "SYNTAX_ERR",
+                                "TYPE_ERR"};
 
 void printerr(const cyErr &e) {
     fprintf(stderr, "cysh: %s at line %d: %s\n", codeStr[(int)e.errcode],

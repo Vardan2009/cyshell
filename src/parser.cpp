@@ -22,8 +22,8 @@ void cyNode::print(int indent) {
 std::expected<cyNode::uptr, cyErr> cyParser::primary() {
     switch (current.t) {
         case cyTok::type::NUMBER: {
-            auto r = std::make_unique<cyNode>(cyNode::type::NUMBER,
-                                              current.start, current.len);
+            auto r = std::make_unique<cyNode>(
+                cyNode::type::NUMBER, current.line, current.start, current.len);
 
             auto a = advance();
             if (!a) return std::unexpected(a.error());
@@ -31,8 +31,8 @@ std::expected<cyNode::uptr, cyErr> cyParser::primary() {
             return r;
         }
         case cyTok::type::VARNAME: {
-            auto r = std::make_unique<cyNode>(cyNode::type::VAR, current.start,
-                                              current.len);
+            auto r = std::make_unique<cyNode>(cyNode::type::VAR, current.line,
+                                              current.start, current.len);
 
             auto a = advance();
             if (!a) return std::unexpected(a.error());
@@ -40,8 +40,8 @@ std::expected<cyNode::uptr, cyErr> cyParser::primary() {
             return r;
         }
         case cyTok::type::STRING: {
-            auto r = std::make_unique<cyNode>(cyNode::type::STRING,
-                                              current.start, current.len);
+            auto r = std::make_unique<cyNode>(
+                cyNode::type::STRING, current.line, current.start, current.len);
 
             auto a = advance();
             if (!a) return std::unexpected(a.error());
@@ -120,7 +120,8 @@ std::expected<cyNode::uptr, cyErr> cyParser::expr(int minPrec) {
 }
 
 std::expected<cyNode::uptr, cyErr> cyParser::cmdGroup() {
-    auto result = std::make_unique<cyNode>(cyNode::type::CMD_GROUP);
+    auto result =
+        std::make_unique<cyNode>(cyNode::type::CMD_GROUP, current.line);
 
     while (isCmdPart(current.t)) {
         auto r = cmd();
@@ -132,7 +133,7 @@ std::expected<cyNode::uptr, cyErr> cyParser::cmdGroup() {
 }
 
 std::expected<cyNode::uptr, cyErr> cyParser::cmd() {
-    auto result = std::make_unique<cyNode>(cyNode::type::CMD);
+    auto result = std::make_unique<cyNode>(cyNode::type::CMD, current.line);
 
     while (isCmdPart(current.t)) {
         auto r = cmdPart();
@@ -155,8 +156,8 @@ std::expected<cyNode::uptr, cyErr> cyParser::cmdPart() {
             auto r = advance();
             if (!r) return std::unexpected(r.error());
 
-            return std::make_unique<cyNode>(cyNode::type::IDENT, tok.start,
-                                            tok.len);
+            return std::make_unique<cyNode>(cyNode::type::IDENT, r->line,
+                                            tok.start, tok.len);
         }
         case cyTok::type::STRING:
         case cyTok::type::VARNAME:

@@ -10,6 +10,7 @@
 #include <variant>
 
 #include "error.h"
+#include "parser.h"
 
 struct cyProcResult {
     int exitCode;
@@ -39,10 +40,11 @@ struct cyVar {
         CONST = 1 << 1,
     };
 
+    std::string name;
     cyVal val;
     flags valFlags;
 
-    cyVar(cyVal v, flags f) : val(v), valFlags(f) {}
+    cyVar(std::string n, cyVal v, flags f) : name(n), val(v), valFlags(f) {}
 };
 
 struct cyScope {
@@ -61,7 +63,7 @@ struct cyScope {
             return std::unexpected(mkerr(cyErr::SYNTAX_ERR, line,
                                          "redeclaration of %s", name.c_str()));
 
-        symbolTable.try_emplace(name, val, flags);
+        symbolTable.try_emplace(name, name, val, flags);
         return {};
     }
 
@@ -81,6 +83,12 @@ struct cyScope {
         auto val = find(name, line);
         if (!val) return std::unexpected(val.error());
 
+        auto var = (*val).get();
+
+        if (var.valFlags & cyVar::CONST)
+            return std::unexpected(mkerr(cyErr::TYPE_ERR, line,
+                                         "%s is constant", var.name.c_str()));
+
         (*val).get().val = newVal;
 
         return {};
@@ -90,5 +98,9 @@ struct cyScope {
     std::unordered_map<std::string, cyVar> symbolTable;
     sptr parent;
 };
+
+using evalRes = std::expected<cyVal, cyErr>;
+
+evalRes eval(cyNode::uptr node, cyScope::sptr scope);
 
 #endif  // CYSH_RUN_H
