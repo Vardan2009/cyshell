@@ -20,6 +20,9 @@ add_executable(cysh
     src/parser.h 
     src/parser.cpp
 
+    src/run.h
+    src/run.cpp
+
     src/error.h 
     src/error.cpp
 
