@@ -6,7 +6,6 @@
 
 #include "error.h"
 #include "lex.h"
-#include "result.h"
 
 struct cyNode {
     using uptr = std::unique_ptr<cyNode>;
@@ -55,12 +54,19 @@ struct cyNode {
 
 class cyParser {
    public:
-    explicit cyParser(cyLex &lex) : lex(lex), current(-1) {
+    explicit cyParser(cyLex &lex) : lex(lex), current(-1) {}
+
+    std::expected<void, cyErr> init() {
         auto result = lex.nextTok();
-        if (result.ok()) current = result.unwrap();
+        if (result)
+            current = *result;
+        else
+            return std::unexpected(result.error());
+
+        return {};
     }
 
-    cyResult<cyNode::uptr, cyErr> parse() { return cmdGroup(); }
+    std::expected<cyNode::uptr, cyErr> parse() { return cmdGroup(); }
 
    private:
     static int precedence(cyTok::type op) {
@@ -82,19 +88,19 @@ class cyParser {
                tt == cyTok::type::LBRACKET || tt == cyTok::type::AMPPAREN;
     }
 
-    cyResult<cyNode::uptr, cyErr> expr(int minPrec = 0);
-    cyResult<cyNode::uptr, cyErr> primary();
+    std::expected<cyNode::uptr, cyErr> expr(int minPrec = 0);
+    std::expected<cyNode::uptr, cyErr> primary();
 
-    cyResult<cyNode::uptr, cyErr> cmdGroup();
-    cyResult<cyNode::uptr, cyErr> cmd();
-    cyResult<cyNode::uptr, cyErr> cmdPart();
+    std::expected<cyNode::uptr, cyErr> cmdGroup();
+    std::expected<cyNode::uptr, cyErr> cmd();
+    std::expected<cyNode::uptr, cyErr> cmdPart();
 
-    cyResult<cyTok, cyErr> advance() {
+    std::expected<cyTok, cyErr> advance() {
         cyTok prev = current;
         auto result = lex.nextTok();
 
-        if (!result.ok()) return result.unwrapErr();
-        current = result.unwrap();
+        if (!result) return result;
+        current = *result;
 
         return prev;
     }

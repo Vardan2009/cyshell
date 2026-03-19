@@ -1,14 +1,10 @@
 #include "lex.h"
 
 #include <ctype.h>
-#include <stdio.h>
-
-#include "error.h"
-#include "result.h"
 
 cyLex::~cyLex() {}
 
-cyResult<cyTok, cyErr> cyLex::oneCharTok() {
+std::expected<cyTok, cyErr> cyLex::oneCharTok() {
     int pos = this->pos++;
     cyTok::type tt;
 
@@ -38,7 +34,7 @@ cyResult<cyTok, cyErr> cyLex::oneCharTok() {
             break;
         case '&':
             if (input[this->pos] != '(') {
-                return resErr<cyTok, cyErr>(
+                return std::unexpected(
                     mkerr(cyErr::SYNTAX_ERR, line, "expected ( after &"));
             }
             ++this->pos;
@@ -49,11 +45,11 @@ cyResult<cyTok, cyErr> cyLex::oneCharTok() {
             tt = cyTok::type::SEMI;
             break;
         default:
-            return resErr<cyTok, cyErr>(
+            return std::unexpected(
                 mkerr(cyErr::INTERNAL_ERR, line, "unhandled one-char token"));
     }
 
-    return resOk<cyTok, cyErr>(cyTok(line, tt, &input[pos], this->pos - pos));
+    return cyTok(line, tt, &input[pos], this->pos - pos);
 }
 
 inline static int isOneChar(char c) {
@@ -65,7 +61,7 @@ inline static int isOneCharExpr(char c) {
     return c == '+' || c == '-' || c == '*' || c == '/';
 }
 
-cyResult<cyTok, cyErr> cyLex::oneCharExprTok() {
+std::expected<cyTok, cyErr> cyLex::oneCharExprTok() {
     int pos = this->pos++;
     cyTok::type tt;
 
@@ -83,36 +79,35 @@ cyResult<cyTok, cyErr> cyLex::oneCharExprTok() {
             tt = cyTok::type::SLASH;
             break;
         default:
-            return resErr<cyTok, cyErr>(mkerr(
-                cyErr::INTERNAL_ERR, line, "unhandled one-char token in expr"));
+            return std::unexpected(mkerr(cyErr::INTERNAL_ERR, line,
+                                         "unhandled one-char token in expr"));
     }
 
-    return resOk<cyTok, cyErr>(cyTok(line, tt, &input[pos], this->pos - pos));
+    return cyTok(line, tt, &input[pos], this->pos - pos);
 }
 
-cyResult<cyTok, cyErr> cyLex::stringTok() {
+std::expected<cyTok, cyErr> cyLex::stringTok() {
     int start = ++pos;
     int startl = line;
 
     while (!isOutBounds() && input[pos] != '"') ++pos;
 
     if (isOutBounds()) {
-        return resErr<cyTok, cyErr>(
+        return std::unexpected(
             mkerr(cyErr::SYNTAX_ERR, line, "unterminated string literal"));
     } else {
         int len = pos - start;
         ++pos;
 
-        return resOk<cyTok, cyErr>(
-            cyTok(startl, cyTok::type::STRING, &input[start], len));
+        return cyTok(startl, cyTok::type::STRING, &input[start], len);
     }
 }
 
-cyResult<cyTok, cyErr> cyLex::varnameTok() {
+std::expected<cyTok, cyErr> cyLex::varnameTok() {
     int startl = line;
     ++pos;
     if (isOutBounds()) {
-        return resErr<cyTok, cyErr>(
+        return std::unexpected(
             mkerr(cyErr::SYNTAX_ERR, line, "expected varname after $"));
     }
 
@@ -120,11 +115,10 @@ cyResult<cyTok, cyErr> cyLex::varnameTok() {
 
     while (!isOutBounds() && (isalnum(input[pos]) || input[pos] == '_')) ++pos;
 
-    return resOk<cyTok, cyErr>(
-        cyTok(startl, cyTok::type::VARNAME, &input[start], pos - start));
+    return cyTok(startl, cyTok::type::VARNAME, &input[start], pos - start);
 }
 
-cyResult<cyTok, cyErr> cyLex::numberTok() {
+std::expected<cyTok, cyErr> cyLex::numberTok() {
     int start = pos;
     int startl = line;
     bool decPnt = false;
@@ -134,11 +128,10 @@ cyResult<cyTok, cyErr> cyLex::numberTok() {
         ++pos;
     }
 
-    return resOk<cyTok, cyErr>(
-        cyTok(startl, cyTok::type::NUMBER, &input[start], pos - start));
+    return cyTok(startl, cyTok::type::NUMBER, &input[start], pos - start);
 }
 
-cyResult<cyTok, cyErr> cyLex::nextTok() {
+std::expected<cyTok, cyErr> cyLex::nextTok() {
     while (true) {
         while (isspace(input[pos])) {
             if (input[pos] == '\n') ++line;
@@ -169,7 +162,7 @@ cyResult<cyTok, cyErr> cyLex::nextTok() {
             if (isdigit(c)) return numberTok();
             if (isOneCharExpr(c)) return oneCharExprTok();
 
-            return resErr<cyTok, cyErr>(
+            return std::unexpected(
                 mkerr(cyErr::SYNTAX_ERR, line, "unhandled character `%c`", c));
         }
         case mode::COMMAND: {
@@ -183,11 +176,11 @@ cyResult<cyTok, cyErr> cyLex::nextTok() {
                 if (isOutBounds()) break;
             }
 
-            return resOk<cyTok, cyErr>(
-                cyTok(startl, cyTok::type::IDENT, &input[start], pos - start));
+            return cyTok(startl, cyTok::type::IDENT, &input[start],
+                         pos - start);
         }
         default:
-            return resErr<cyTok, cyErr>(
+            return std::unexpected(
                 mkerr(cyErr::INTERNAL_ERR, line, "unhandled lexer mode"));
     }
 }

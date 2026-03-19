@@ -6,7 +6,6 @@
 
 #include "lex.h"
 #include "parser.h"
-#include "result.h"
 
 volatile sig_atomic_t gotSigInt = 0;
 
@@ -38,11 +37,14 @@ void cyProc(const char *src, size_t len) {
 
     cyParser p(l);
 
+    auto init = p.init();
+    if (!init) printerr(init.error());
+
     auto n = p.parse();
-    if (n.ok())
-        n.unwrap()->print();
+    if (n)
+        (*n)->print();
     else
-        printerr(n.unwrapErr());
+        printerr(n.error());
 }
 
 int main(int argc, char *argv[]) {

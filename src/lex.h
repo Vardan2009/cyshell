@@ -3,10 +3,10 @@
 
 #include <stddef.h>
 
+#include <expected>
 #include <stack>
 
 #include "error.h"
-#include "result.h"
 
 struct cyTok {
     enum type {
@@ -52,7 +52,7 @@ class cyLex {
 
     ~cyLex();
 
-    cyResult<cyTok, cyErr> nextTok();
+    std::expected<cyTok, cyErr> nextTok();
 
    private:
     enum mode { COMMAND, EXPR };
@@ -71,11 +71,11 @@ class cyLex {
 
     inline bool isOutBounds() { return pos >= inputSz; }
 
-    cyResult<cyTok, cyErr> numberTok();
-    cyResult<cyTok, cyErr> oneCharTok();
-    cyResult<cyTok, cyErr> oneCharExprTok();
-    cyResult<cyTok, cyErr> stringTok();
-    cyResult<cyTok, cyErr> varnameTok();
+    std::expected<cyTok, cyErr> numberTok();
+    std::expected<cyTok, cyErr> oneCharTok();
+    std::expected<cyTok, cyErr> oneCharExprTok();
+    std::expected<cyTok, cyErr> stringTok();
+    std::expected<cyTok, cyErr> varnameTok();
 };
 
 #endif  // CYSH_LEX_H
