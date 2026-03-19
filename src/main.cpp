@@ -76,6 +76,7 @@ int main(int argc, char *argv[]) {
                 clearerr(stdin);
                 gotSigInt = 0;
                 printf("\n");
+                free(line);
                 continue;
             }
 
