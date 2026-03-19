@@ -83,6 +83,9 @@ std::expected<cyNode::uptr, cyErr> cyParser::primary() {
 
             return std::move(*t);
         }
+        case cyTok::type::EF:
+            return std::unexpected(
+                mkerr(cyErr::INTERNAL_ERR, current.line, "expected primary"));
         default:
             return std::unexpected(
                 mkerr(cyErr::INTERNAL_ERR, current.line, "unhandled primary"));
