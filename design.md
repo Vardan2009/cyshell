@@ -60,12 +60,12 @@ echo ($greeting + ", " + $name + "!")
 ```sh
 let file $1;
 
-if not {exists $file} {
+if !{exists $file}? {
     echo File does not exist
     exit 1
 }
 
-if {readable $file}
+if {readable $file}?
     echo File is readable;
 else File is not readable
 ```
@@ -82,7 +82,7 @@ fn even {
 
 let num 10;
 
-if {even $num}
+if {even $num}?
     echo $num is even;
 else
     echo $num is odd;
