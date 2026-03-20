@@ -22,8 +22,11 @@ struct cyTok {
         RBRACKET,
 
         PIPE,
-        AMPPAREN,
+        CMDPAREN,
         VARNAME,
+        QMARK,
+        EMARK,
+        AMP,
 
         PLUS,
         MINUS,
@@ -55,7 +58,7 @@ class cyLex {
     std::expected<cyTok, cyErr> nextTok();
 
    private:
-    enum mode { COMMAND, EXPR };
+    enum mode { COMMAND, EXPR, EXPR_CMD };
 
     const char *input;
     size_t inputSz;

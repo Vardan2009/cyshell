@@ -10,9 +10,11 @@ std::expected<cyTok, cyErr> cyLex::oneCharTok() {
 
     switch (input[pos]) {
         case '[':
+            push(mode::COMMAND);
             tt = cyTok::type::LSQR;
             break;
         case ']':
+            pop();
             tt = cyTok::type::RSQR;
             break;
         case '(':
@@ -34,17 +36,28 @@ std::expected<cyTok, cyErr> cyLex::oneCharTok() {
         case '|':
             tt = cyTok::type::PIPE;
             break;
-        case '&':
+        case '@':
             if (input[this->pos] != '(') {
                 return std::unexpected(
-                    mkerr(cyErr::SYNTAX_ERR, line, "expected ( after &"));
+                    mkerr(cyErr::SYNTAX_ERR, line, "expected ( after @"));
             }
             ++this->pos;
             push(mode::COMMAND);
-            tt = cyTok::type::AMPPAREN;
+            tt = cyTok::type::CMDPAREN;
             break;
         case ';':
+            if (modeStack.top() == EXPR_CMD) pop();
             tt = cyTok::type::SEMI;
+            break;
+        case '?':
+            tt = cyTok::type::QMARK;
+            break;
+        case '!':
+            push(mode::EXPR_CMD);
+            tt = cyTok::type::EMARK;
+            break;
+        case '&':
+            tt = cyTok::type::AMP;
             break;
         default:
             return std::unexpected(
@@ -56,7 +69,8 @@ std::expected<cyTok, cyErr> cyLex::oneCharTok() {
 
 inline static int isOneChar(char c) {
     return c == '[' || c == ']' || c == '(' || c == ')' || c == '{' ||
-           c == '}' || c == '|' || c == '&' || c == ';';
+           c == '}' || c == '|' || c == '@' || c == ';' || c == '?' ||
+           c == '&' || c == '!';
 }
 
 inline static int isOneCharExpr(char c) {
@@ -160,7 +174,8 @@ std::expected<cyTok, cyErr> cyLex::nextTok() {
     if (c == '$') return varnameTok();
 
     switch (cMode()) {
-        case mode::EXPR: {
+        case mode::EXPR:
+        case mode::EXPR_CMD: {
             if (isdigit(c)) return numberTok();
             if (isOneCharExpr(c)) return oneCharExprTok();
 

@@ -7,7 +7,7 @@
 {  }? => command grouping + evals to exit code
 [   ] => subshell (doesnt eval to anything)
 [  ]? => subshell + evals exit code
-$(  ) => command substitution (evals to stdout)
+@(  ) => command substitution (evals to stdout)
 (   ) => expression substitution (evals to result of expression inside)
 ! ... => expression command (doesnt eval to anything, command type)
 & ... => background command (doesnt eval to anything, command type)

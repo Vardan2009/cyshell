@@ -16,9 +16,14 @@ struct cyNode {
         NUMBER,
         VAR,
         CMD_GROUP,
+        CMD_GROUP_Q,
+        SUBSHELL,
+        SUBSHELL_Q,
         CMD,
         BINOP,
         CAPT_CMD,
+        EXPR_CMD,
+        BG_CMD,
     };
 
     type t;
@@ -88,7 +93,9 @@ class cyParser {
     static bool isCmdPart(cyTok::type tt) {
         return tt == cyTok::type::IDENT || tt == cyTok::type::STRING ||
                tt == cyTok::type::VARNAME || tt == cyTok::type::LPAREN ||
-               tt == cyTok::type::AMPPAREN;
+               tt == cyTok::type::CMDPAREN || tt == cyTok::type::LSQR ||
+               tt == cyTok::type::LBRACKET || tt == cyTok::type::EMARK ||
+               tt == cyTok::type::AMP;
     }
 
     std::expected<cyNode::uptr, cyErr> expr(int minPrec = 0);

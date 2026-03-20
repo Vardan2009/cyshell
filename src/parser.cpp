@@ -66,7 +66,7 @@ std::expected<cyNode::uptr, cyErr> cyParser::primary() {
 
             return std::move(*t);
         }
-        case cyTok::type::AMPPAREN: {
+        case cyTok::type::CMDPAREN: {
             int line = current.line;
             auto r = advance();
             if (!r) return std::unexpected(r.error());
@@ -82,6 +82,36 @@ std::expected<cyNode::uptr, cyErr> cyParser::primary() {
             if (!r) return std::unexpected(r.error());
 
             return std::move(*t);
+        }
+        case cyTok::type::LSQR:
+        case cyTok::type::LBRACKET: {
+            cyTok::type opening = current.t;
+            cyNode::type t = opening == cyTok::type::LBRACKET
+                                 ? cyNode::type::CMD_GROUP
+                                 : cyNode::type::SUBSHELL;
+
+            auto r = advance();
+            if (!r) return std::unexpected(r.error());
+
+            auto root = cmdGroup();
+            if (!root) return root;
+            if (current.t != (opening == cyTok::type::LBRACKET
+                                  ? cyTok::type::RBRACKET
+                                  : cyTok::type::RSQR))
+                return std::unexpected(
+                    mkerr(cyErr::SYNTAX_ERR, r->line, "unclosed `%c`",
+                          opening == cyTok::type::LBRACKET ? '}' : ']'));
+
+            r = advance();
+            if (!r) return std::unexpected(r.error());
+
+            if (current.t == cyTok::type::QMARK)
+                t = opening == cyTok::type::LBRACKET ? cyNode::type::CMD_GROUP_Q
+                                                     : cyNode::type::SUBSHELL_Q;
+
+            (*root)->t = t;
+
+            return std::move(*root);
         }
         case cyTok::type::EF:
             return std::unexpected(
@@ -124,28 +154,6 @@ std::expected<cyNode::uptr, cyErr> cyParser::cmdGroup() {
         std::make_unique<cyNode>(cyNode::type::CMD_GROUP, current.line);
 
     while (isCmdPart(current.t) || current.t == cyTok::type::LBRACKET) {
-        if (current.t == cyTok::type::LBRACKET) {
-            auto r = advance();
-            if (!r) return std::unexpected(r.error());
-
-            auto root = cmdGroup();
-            if (!root) return root;
-            if (current.t != cyTok::type::RBRACKET)
-                return std::unexpected(
-                    mkerr(cyErr::SYNTAX_ERR, r->line, "unclosed `{`"));
-
-            r = advance();
-            if (!r) return std::unexpected(r.error());
-
-            if (current.t == cyTok::type::SEMI) {
-                auto r = advance();
-                if (!r) return std::unexpected(r.error());
-            }
-
-            result->children.push_back(std::move(*root));
-            continue;
-        }
-
         auto r = cmd();
         if (!r) return r;
         result->children.push_back(std::move(*r));
@@ -157,12 +165,32 @@ std::expected<cyNode::uptr, cyErr> cyParser::cmdGroup() {
 std::expected<cyNode::uptr, cyErr> cyParser::cmd() {
     auto result = std::make_unique<cyNode>(cyNode::type::CMD, current.line);
 
+    if (current.t == cyTok::type::AMP) {
+        auto r = advance();
+        if (!r) return std::unexpected(r.error());
+
+        result->t = cyNode::type::BG_CMD;
+
+    } else if (current.t == cyTok::type::EMARK) {
+        printf("EMARK\n");
+        auto r = advance();
+        if (!r) return std::unexpected(r.error());
+
+        result->t = cyNode::type::EXPR_CMD;
+
+        auto exprr = expr();
+        if (!exprr) return exprr;
+
+        result->children.push_back(std::move(std::move(*exprr)));
+        goto semiCheck;
+    }
+
     while (isCmdPart(current.t)) {
         auto r = cmdPart();
         if (!r) return r;
         result->children.push_back(std::move(*r));
     }
-
+semiCheck:
     if (current.t == cyTok::type::SEMI) {
         auto r = advance();
         if (!r) return std::unexpected(r.error());
@@ -184,7 +212,9 @@ std::expected<cyNode::uptr, cyErr> cyParser::cmdPart() {
         case cyTok::type::STRING:
         case cyTok::type::VARNAME:
         case cyTok::type::LPAREN:
-        case cyTok::type::AMPPAREN:
+        case cyTok::type::CMDPAREN:
+        case cyTok::type::LBRACKET:
+        case cyTok::type::LSQR:
             return primary();
         default:
             return std::unexpected(mkerr(cyErr::INTERNAL_ERR, tok.line,
