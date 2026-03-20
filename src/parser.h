@@ -88,7 +88,7 @@ class cyParser {
     static bool isCmdPart(cyTok::type tt) {
         return tt == cyTok::type::IDENT || tt == cyTok::type::STRING ||
                tt == cyTok::type::VARNAME || tt == cyTok::type::LPAREN ||
-               tt == cyTok::type::LBRACKET || tt == cyTok::type::AMPPAREN;
+               tt == cyTok::type::AMPPAREN;
     }
 
     std::expected<cyNode::uptr, cyErr> expr(int minPrec = 0);

@@ -123,7 +123,29 @@ std::expected<cyNode::uptr, cyErr> cyParser::cmdGroup() {
     auto result =
         std::make_unique<cyNode>(cyNode::type::CMD_GROUP, current.line);
 
-    while (isCmdPart(current.t)) {
+    while (isCmdPart(current.t) || current.t == cyTok::type::LBRACKET) {
+        if (current.t == cyTok::type::LBRACKET) {
+            auto r = advance();
+            if (!r) return std::unexpected(r.error());
+
+            auto root = cmdGroup();
+            if (!root) return root;
+            if (current.t != cyTok::type::RBRACKET)
+                return std::unexpected(
+                    mkerr(cyErr::SYNTAX_ERR, r->line, "unclosed `{`"));
+
+            r = advance();
+            if (!r) return std::unexpected(r.error());
+
+            if (current.t == cyTok::type::SEMI) {
+                auto r = advance();
+                if (!r) return std::unexpected(r.error());
+            }
+
+            result->children.push_back(std::move(*root));
+            continue;
+        }
+
         auto r = cmd();
         if (!r) return r;
         result->children.push_back(std::move(*r));
@@ -164,21 +186,6 @@ std::expected<cyNode::uptr, cyErr> cyParser::cmdPart() {
         case cyTok::type::LPAREN:
         case cyTok::type::AMPPAREN:
             return primary();
-        case cyTok::type::LBRACKET: {
-            auto r = advance();
-            if (!r) return std::unexpected(r.error());
-
-            auto root = cmdGroup();
-            if (!root) return root;
-            if (current.t != cyTok::type::RBRACKET)
-                return std::unexpected(
-                    mkerr(cyErr::SYNTAX_ERR, r->line, "unclosed `{`"));
-
-            r = advance();
-            if (!r) return std::unexpected(r.error());
-
-            return std::move(*root);
-        }
         default:
             return std::unexpected(mkerr(cyErr::INTERNAL_ERR, tok.line,
                                          "invalid command part of type %d",

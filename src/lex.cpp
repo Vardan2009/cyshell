@@ -24,9 +24,11 @@ std::expected<cyTok, cyErr> cyLex::oneCharTok() {
             tt = cyTok::type::RPAREN;
             break;
         case '{':
+            push(mode::COMMAND);
             tt = cyTok::type::LBRACKET;
             break;
         case '}':
+            pop();
             tt = cyTok::type::RBRACKET;
             break;
         case '|':
