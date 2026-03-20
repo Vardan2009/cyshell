@@ -105,9 +105,13 @@ std::expected<cyNode::uptr, cyErr> cyParser::primary() {
             r = advance();
             if (!r) return std::unexpected(r.error());
 
-            if (current.t == cyTok::type::QMARK)
+            if (current.t == cyTok::type::QMARK) {
+                r = advance();
+                if (!r) return std::unexpected(r.error());
+
                 t = opening == cyTok::type::LBRACKET ? cyNode::type::CMD_GROUP_Q
                                                      : cyNode::type::SUBSHELL_Q;
+            }
 
             (*root)->t = t;
 
@@ -165,14 +169,7 @@ std::expected<cyNode::uptr, cyErr> cyParser::cmdGroup() {
 std::expected<cyNode::uptr, cyErr> cyParser::cmd() {
     auto result = std::make_unique<cyNode>(cyNode::type::CMD, current.line);
 
-    if (current.t == cyTok::type::AMP) {
-        auto r = advance();
-        if (!r) return std::unexpected(r.error());
-
-        result->t = cyNode::type::BG_CMD;
-
-    } else if (current.t == cyTok::type::EMARK) {
-        printf("EMARK\n");
+    if (current.t == cyTok::type::EMARK) {
         auto r = advance();
         if (!r) return std::unexpected(r.error());
 
@@ -182,15 +179,29 @@ std::expected<cyNode::uptr, cyErr> cyParser::cmd() {
         if (!exprr) return exprr;
 
         result->children.push_back(std::move(std::move(*exprr)));
-        goto semiCheck;
-    }
+    } else {
+        if (current.t == cyTok::type::AMP) {
+            auto r = advance();
+            if (!r) return std::unexpected(r.error());
 
-    while (isCmdPart(current.t)) {
+            result->t = cyNode::type::BG_CMD;
+        }
+
         auto r = cmdPart();
         if (!r) return r;
+
+        if ((*r)->t == cyNode::CMD_GROUP || (*r)->t == cyNode::SUBSHELL)
+            return std::move(*r);
+
         result->children.push_back(std::move(*r));
+
+        while (isCmdPart(current.t)) {
+            auto r = cmdPart();
+            if (!r) return r;
+            result->children.push_back(std::move(*r));
+        }
     }
-semiCheck:
+
     if (current.t == cyTok::type::SEMI) {
         auto r = advance();
         if (!r) return std::unexpected(r.error());
