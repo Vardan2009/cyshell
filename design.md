@@ -10,7 +10,7 @@
 @(  ) => command substitution (evals to stdout)
 (   ) => expression substitution (evals to result of expression inside)
 ! ... => expression command (doesnt eval to anything, command type)
-& ... => background command (doesnt eval to anything, command type)
+& ... => background command (evals to process id, command type)
 ```
 
 ## Special "directives"
@@ -34,6 +34,8 @@ const nil     # nil
 ```sh
 let x $nil
 dup $STDERR > $STDOUT
+waitpid $pid
+waitall
 ```
 
 ## Examples
