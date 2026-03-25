@@ -21,14 +21,19 @@ struct cyNode {
         SUBSHELL_Q,
         CMD,
         BINOP,
-        CAPT_CMD,
-        EXPR_CMD,
-        BG_CMD,
+        CAPT_PROGRAM,
+        EXPR_STMT,
+        PIPE,
+
+        FDUP,
+        REDIRECT
     };
 
     type t;
     std::vector<uptr> children;
     int line;
+
+    bool background = false;
 
     union {
         struct {
@@ -64,6 +69,8 @@ class cyParser {
    public:
     explicit cyParser(cyLex &lex) : lex(lex), current(-1) {}
 
+    using result = std::expected<cyNode::uptr, cyErr>;
+
     std::expected<void, cyErr> init() {
         auto result = lex.nextTok();
         if (result)
@@ -74,7 +81,7 @@ class cyParser {
         return {};
     }
 
-    std::expected<cyNode::uptr, cyErr> parse() { return cmdGroup(); }
+    result parse() { return program(); }
 
    private:
     static int precedence(cyTok::type op) {
@@ -90,20 +97,22 @@ class cyParser {
         }
     }
 
-    static bool isCmdPart(cyTok::type tt) {
-        return tt == cyTok::type::IDENT || tt == cyTok::type::STRING ||
-               tt == cyTok::type::VARNAME || tt == cyTok::type::LPAREN ||
-               tt == cyTok::type::CMDPAREN || tt == cyTok::type::LSQR ||
-               tt == cyTok::type::LBRACKET || tt == cyTok::type::EMARK ||
-               tt == cyTok::type::AMP;
-    }
+    result expr(int minPrec = 0);
+    result primary();
 
-    std::expected<cyNode::uptr, cyErr> expr(int minPrec = 0);
-    std::expected<cyNode::uptr, cyErr> primary();
+    result program();
+    result statement();
+    result command();
+    result commandUnit();
+    result commandPart();
 
-    std::expected<cyNode::uptr, cyErr> cmdGroup();
-    std::expected<cyNode::uptr, cyErr> cmd();
-    std::expected<cyNode::uptr, cyErr> cmdPart();
+    result commandGroup();
+    result commandGroupQ();
+
+    result subshell();
+    result subshellQ();
+
+    result commandCapture();
 
     std::expected<cyTok, cyErr> advance() {
         cyTok prev = current;

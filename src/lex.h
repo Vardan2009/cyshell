@@ -27,12 +27,16 @@ struct cyTok {
         QMARK,
         EMARK,
         AMP,
+        CARET,
 
         PLUS,
         MINUS,
         STAR,
         SLASH,
         SEMI,
+
+        GT,
+        LT,
 
         EF
     };

@@ -60,8 +60,8 @@ evalRes eval(cyNode::uptr node, cyScope::sptr scope) {
             return evalCmd(std::move(node), scope);
         case cyNode::BINOP:
             return evalBinOp(std::move(node), scope);
-        case cyNode::CAPT_CMD:
-            return evalCmd(std::move(node), scope, true);
+        /* case cyNode::CAPT_PROGRAM:
+            return evalCmd(std::move(node), scope, true); */
         default:
             return std::unexpected(
                 mkerr(cyErr::INTERNAL_ERR, node->line, "unhandled node"));

@@ -59,6 +59,15 @@ std::expected<cyTok, cyErr> cyLex::oneCharTok() {
         case '&':
             tt = cyTok::type::AMP;
             break;
+        case '^':
+            tt = cyTok::type::CARET;
+            break;
+        case '>':
+            tt = cyTok::type::GT;
+            break;
+        case '<':
+            tt = cyTok::type::LT;
+            break;
         default:
             return std::unexpected(
                 mkerr(cyErr::INTERNAL_ERR, line, "unhandled one-char token"));
@@ -70,7 +79,7 @@ std::expected<cyTok, cyErr> cyLex::oneCharTok() {
 inline static int isOneChar(char c) {
     return c == '[' || c == ']' || c == '(' || c == ')' || c == '{' ||
            c == '}' || c == '|' || c == '@' || c == ';' || c == '?' ||
-           c == '&' || c == '!';
+           c == '&' || c == '!' || c == '^' || c == '>';
 }
 
 inline static int isOneCharExpr(char c) {
