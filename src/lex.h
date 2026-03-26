@@ -62,7 +62,7 @@ class cyLex {
     std::expected<cyTok, cyErr> nextTok();
 
    private:
-    enum mode { COMMAND, EXPR, EXPR_CMD };
+    enum mode { COMMAND, EXPR, EXPR_CMD, COMMAND_AMP };
 
     const char *input;
     size_t inputSz;

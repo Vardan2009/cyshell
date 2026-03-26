@@ -46,7 +46,9 @@ std::expected<cyTok, cyErr> cyLex::oneCharTok() {
             tt = cyTok::type::CMDPAREN;
             break;
         case ';':
-            if (modeStack.top() == EXPR_CMD) pop();
+            while (modeStack.top() == EXPR_CMD ||
+                   modeStack.top() == COMMAND_AMP)
+                pop();
             tt = cyTok::type::SEMI;
             break;
         case '?':
@@ -58,6 +60,7 @@ std::expected<cyTok, cyErr> cyLex::oneCharTok() {
             break;
         case '&':
             tt = cyTok::type::AMP;
+            push(mode::COMMAND_AMP);
             break;
         case '^':
             tt = cyTok::type::CARET;
@@ -191,7 +194,8 @@ std::expected<cyTok, cyErr> cyLex::nextTok() {
             return std::unexpected(
                 mkerr(cyErr::SYNTAX_ERR, line, "unhandled character `%c`", c));
         }
-        case mode::COMMAND: {
+        case mode::COMMAND:
+        case mode::COMMAND_AMP: {
             int start = pos;
             int startl = line;
 

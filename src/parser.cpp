@@ -10,11 +10,16 @@ void cyNode::print(int indent) {
     for (int i = 0; i < indent; ++i) printf("   ");
 
     if (t == type::BINOP)
-        printf("- [%d] OP %d\n", t, val.tt);
+        printf("- [%d] OP %d", t, val.tt);
     else if (val.str.start == NULL)
-        printf("- [%d]\n", t);
+        printf("- [%d]", t);
     else
-        printf("- [%d] \"%.*s\"\n", t, (int)val.str.len, val.str.start);
+        printf("- [%d] \"%.*s\"", t, (int)val.str.len, val.str.start);
+
+    if (background)
+        printf(" BACKGROUND\n");
+    else
+        printf("\n");
 
     for (size_t i = 0; i < children.size(); ++i) children[i]->print(indent + 1);
 }
@@ -91,6 +96,8 @@ cyParser::result cyParser::primary() {
             return subshellQ();
         case cyTok::type::LBRACKET:
             return commandGroupQ();
+        case cyTok::type::AMP:
+            return statement();
         case cyTok::type::EF:
             return std::unexpected(
                 mkerr(cyErr::INTERNAL_ERR, current.line, "expected primary"));
@@ -161,12 +168,22 @@ cyParser::result cyParser::statement() {
             if (!result) return result;
             (*result)->background = background;
 
+            if (current.t == cyTok::SEMI) {
+                auto r = advance();
+                if (!r) return std::unexpected(r.error());
+            }
+
             return result;
         }
         case cyTok::LSQR: {
             auto result = subshell();
             if (!result) return result;
             (*result)->background = background;
+
+            if (current.t == cyTok::SEMI) {
+                auto r = advance();
+                if (!r) return std::unexpected(r.error());
+            }
 
             return result;
         }
@@ -182,6 +199,12 @@ cyParser::result cyParser::statement() {
 
             result->children.push_back(std::move(*exp));
             result->background = background;
+
+            if (current.t == cyTok::SEMI) {
+                auto r = advance();
+                if (!r) return std::unexpected(r.error());
+            }
+
             return result;
         }
         default:
@@ -190,7 +213,17 @@ cyParser::result cyParser::statement() {
 
     // TODO: handle if and other statements here
 
-    return command();
+    auto fallback = command();
+    if (!fallback) return fallback;
+
+    (*fallback)->background = background;
+
+    if (current.t == cyTok::SEMI) {
+        auto r = advance();
+        if (!r) return std::unexpected(r.error());
+    }
+
+    return fallback;
 }
 
 cyParser::result cyParser::command() {
